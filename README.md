@@ -1,6 +1,6 @@
 # KeyShard : Distributed Password Manager with AI Strength Evaluation
 
-##ABSTRACT
+## ABSTRACT
 KeyShard is a distributed password manager that prioritizes security, decentralization, and intelligent password evaluation. The system addresses the limitations of traditional centralized password managers, which are vulnerable to data breaches and single points of failure. By using a Kademlia-based Distributed Hash Table (DHT), KeyShard ensures fault tolerance, scalability, and availability of encrypted credentials across multiple nodes in the network. To secure sensitive user data, the system employs hybrid encryption using RSA-OAEP for secure key exchange and AES-GCM for fast and authenticated encryption, along with Argon2id for strong password hashing. These cryptographic methods prevent unauthorized access and enhance data integrity across distributed nodes. KeyShard also features a machine learning-based password strength analyzer built using the XGBoost classifier, which provides real-time feedback to users about the quality and security of their passwords going beyond traditional rule-based systems. The system is containerized using Docker and built using React Native, Go, Flask, and Python to ensure cross-platform compatibility and modular deployment. The expected outcome is a secure, decentralized, and intelligent password management solution suitable for both personal and enterprise-level users.
 
-Keywords: Distributed Password Manager, Hybrid Encryption, Kademlia DHT, Argon2id, XGBoost, Docker, Data Integrity, Secure Key Exchange.
+# Keywords: Distributed Password Manager, Hybrid Encryption, Kademlia DHT, Argon2id, XGBoost, Docker, Data Integrity, Secure Key Exchange.
