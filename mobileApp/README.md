@@ -1,50 +1,52 @@
-# Welcome to your Expo app 👋
+# 📱 React Native Cheatsheet
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A quick reference guide comparing common **HTML elements** with their **React Native equivalents**, along with styling differences.
 
-## Get started
+---
 
-1. Install dependencies
+## 🧱 Structural Elements
 
-   ```bash
-   npm install
-   ```
+| HTML Tag | React Native Component | Description |
+|---------|-------------------------|-------------|
+| `<div>` | `<View>` | The most fundamental building block for layout and styling. |
+| `<span>` | `<Text>` | Used for displaying inline or small text content. |
+| `<p>` | `<Text>` | Paragraph-like text, handled by styling. |
+| `<h1>` – `<h6>` | `<Text>` | Headings are created by applying font sizes and weights using styles. |
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 🧩 Content Elements
 
-In the output, you'll find options to open the app in a
+| HTML Tag | React Native Component | Description |
+|---------|-------------------------|-------------|
+| `<img>` | `<Image>` | Displays images. Uses `source` prop with `require()` (local) or `{ uri: "" }` (remote). |
+| `<input type="text">` | `<TextInput>` | Standard single-line text input. |
+| `<textarea>` | `<TextInput multiline />` | Multi-line text input. |
+| `<button>` | `<Button>`, `<TouchableOpacity>`, `<Pressable>` | `<Button>` is basic; others offer customization and animations. |
+| `<a>` | `<Text>` + `Linking` API | Use `<Text onPress>` with `Linking.openURL()` for links. |
+| `<ul>`, `<ol>`, `<li>` | `<View>` + `<Text>` | Lists are created by mapping over data and rendering components. |
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🎨 Styling
 
-## Get a fresh project
+| HTML Concept | React Native Equivalent | Description |
+|--------------|-------------------------|-------------|
+| CSS Styles | `StyleSheet.create()` | React Native uses JS objects for defining styles. |
+| class / id | `style` prop | Styles applied directly using a style object or array. |
+| Flexbox | Flexbox in `style` | Layout uses Flexbox with properties like `flexDirection`, `justifyContent`, `alignItems`, etc. |
 
-When you're ready, run:
+**Example style object:**
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```js
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+});
