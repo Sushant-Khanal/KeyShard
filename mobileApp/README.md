@@ -2,6 +2,7 @@
 
 SignIn Page Mobile
 ![Sign In Page](assets/images/SigninPage.jpg)
+![Sign Up Page](assets/images/Signup.jpg)
 
 
 

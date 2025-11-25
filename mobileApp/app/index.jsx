@@ -52,7 +52,7 @@ const Login = () => {
                         color={'white'}
                         placeholderTextColor={'white'}
                         height={40}
-                        className='w-full p-2  text-white mt-[10px] bg-gray-900 rounded-lg border border-white rounded-lg p-2' />
+                        className='w-full p-2 focus:border focus:border-white focus:outline-none text-white mt-[10px] bg-gray-700 rounded-lg p-2' />
                 </View>
 
                 {/* Unlock Button */}
@@ -84,7 +84,7 @@ const Login = () => {
                 <TouchableOpacity
                     onPress={handleCreateMasterPassword}
                 >
-                    <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm border-b-[0.5px]  text-blue-500 border-white  font-medium mt-[20px]'>Create Master Password</Text>
+                    <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-sm border-b-[0.5px]  text-blue-500 border-white  font-medium mt-[20px]'>Create Master Password</Text>
                 </TouchableOpacity>
 
                 {/* Bottom Text */}
