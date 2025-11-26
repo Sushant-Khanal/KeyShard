@@ -20,6 +20,10 @@ const Login = () => {
         navigate('./components/signup')
     }
 
+    function handleUnlock() {
+        navigate('/home')
+    }
+
     return (
         <LinearGradient
             colors={['#1b2125ff', '#051629ff']}
@@ -52,13 +56,13 @@ const Login = () => {
                         color={'white'}
                         placeholderTextColor={'white'}
                         height={40}
-                        className='w-full p-2 focus:border focus:border-white focus:outline-none text-white mt-[10px] bg-gray-700 rounded-lg p-2' />
+                        className='w-full p-2 focus:border focus:border-white focus:outline-none text-white mt-[10px] bg-gray-700 rounded-lg ' />
                 </View>
 
                 {/* Unlock Button */}
                 <View className='mt-[10px] flex justify-center items-center w-4/5 '>
                     <TouchableOpacity
-                        onPress={() => console.log("Unlockkk")}
+                        onPress={handleUnlock}
                         className='w-full m-auto flex justify-center items-center p-3 text-white mt-[10px] bg-[#5783F3] rounded-md p-2'
                     >
                         <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white font-semibold text-xl'>Unlock</Text>

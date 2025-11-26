@@ -89,10 +89,16 @@ const SignUp = () => {
                     {passwordStrength && (
                         <View className='flex w-full flex-row gap-[10px] justify-center items-center'>
                             <View className='w-4/5 h-[20px] flex flex-row justify-center border  items-center bg-gray-700 rounded-lg  mt-[5px]'>
-                                {passwordStrength.toLowerCase() == 'weak' && <View className="w-1/4 h-full mr-auto rounded-lg bg-red-500" />}
-                                {passwordStrength.toLowerCase() == 'medium' && <View className="w-2/4 h-full mr-auto rounded-lg bg-yellow-500" />}
-                                {passwordStrength.toLowerCase() == 'strong' && <View className="w-3/4 h-full mr-auto rounded-lg bg-blue-500" />}
-                                {passwordStrength.toLowerCase() == 'excellent' && <View className="w-full h-full mr-auto rounded-lg bg-green-500" />}
+                                {passwordStrength.toLowerCase() == 'weak' ?
+                                    (<View className="w-1/4 h-full mr-auto rounded-lg bg-red-500" />) :
+                                    passwordStrength.toLowerCase() == 'medium' ?
+                                        (<View className="w-2/4 h-full mr-auto rounded-lg bg-yellow-500" />) :
+                                        passwordStrength.toLowerCase() == 'strong' ?
+                                            (<View className="w-3/4 h-full mr-auto rounded-lg bg-blue-500" />) :
+                                            passwordStrength.toLowerCase() == 'excellent' ?
+                                                (<View className="w-full h-full mr-auto rounded-lg bg-green-500" />) :
+                                                <View><Text>Nothing</Text></View>}
+
                             </View>
                             <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm font-medium'>
                                 {passwordStrength.toUpperCase()}
