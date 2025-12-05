@@ -5,6 +5,8 @@ import { Text, TextInput, View, Button, TouchableOpacity } from 'react-native'
 import { useState } from 'react'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { navigate } from 'expo-router/build/global-state/routing'
+import genMasterKey from '../masterPass';
+
 
 
 
@@ -15,6 +17,8 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [passwordStrength, setPasswordStrength] = useState("medium");
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false)
+    const [masterKey, setMasterKey] = useState();
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
@@ -24,6 +28,17 @@ const SignUp = () => {
     useEffect(() => {
 
     }, [passwordStrength]);
+
+    const handleSignUp = async () => {
+
+        if (!password?.length) return
+        setLoading(true)
+        const masterKey = genMasterKey(password);
+        setMasterKey(masterKey)
+        console.log("Hexadecimal: ", masterKey);
+        setLoading(false)
+    }
+
     return (
         <LinearGradient
             colors={['#1b2125ff', '#051629ff']}
@@ -53,9 +68,9 @@ const SignUp = () => {
                     <View className='flex w-full  justify-center items-center'>
                         <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >New Master Password</Text>
                         <TextInput
-                            secureTextEntry={true}
+                            secureTextEntry={false}
                             style={{ fontFamily: 'Montserrat_400Regular' }}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChangeText={(text) => setPassword(text)}
                             value={password}
                             placeholder="Enter Password"
                             color={'white'}
@@ -67,9 +82,9 @@ const SignUp = () => {
                     <View className='flex mt-[20px] w-full justify-center items-center'>
                         <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >Confirm Password</Text>
                         <TextInput
-                            secureTextEntry={true}
+                            secureTextEntry={false}
                             style={{ fontFamily: 'Montserrat_400Regular' }}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onChangeText={(text) => setConfirmPassword(text)}
                             value={confirmPassword}
                             placeholder="Re-Enter Password"
                             color={'white'}
@@ -119,9 +134,13 @@ const SignUp = () => {
                     ))}
                 </View>
 
+                <View>
+                    {masterKey && <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white mt-[5px] mr-auto text-md font-medium '>Master Key: {masterKey}</Text>}
+                </View>
+
                 {/* Botttom Button */}
                 <TouchableOpacity
-                    onPress={() => console.log("Create")}
+                    onPress={handleSignUp}
                     className='w-full absolute bottom-[20px] m-auto flex justify-center items-center p-3 text-white mt-[10px] bg-[#5783F3] rounded-md p-2'
                 >
                     <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white font-semibold text-xl'>Create Vault</Text>
