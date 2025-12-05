@@ -5,6 +5,7 @@ SignIn Page Mobile
 ![Sign In Page](assets/images/SigninPage.jpg)
 ![Sign Up Page](assets/images/SignUp.jpg)
 ![Home Page](assets/images/Home.jpg)
+![Argon2 Output] (assets/images/Argon2Output.png)
 
 
 
