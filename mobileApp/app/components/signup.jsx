@@ -5,7 +5,7 @@ import { Text, TextInput, View, Button, TouchableOpacity } from 'react-native'
 import { useState } from 'react'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { navigate } from 'expo-router/build/global-state/routing'
-import genMasterKey from '../masterPass';
+import genMasterKey from '../security/masterPass';
 
 
 
@@ -49,7 +49,7 @@ const SignUp = () => {
                 {/* Top Logo */}
                 <View className='flex-row absolute border-b border-blue-500 py-1 top-[90px] items-center '>
                     <Key color={'white'} size={35} strokeWidth={2} />
-                    <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white  text-3xl ml-[10px] '>KeyShards</Text>
+                    <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white  text-3xl ml-[8px] '>KeyShards</Text>
                 </View>
 
                 {/* Middle Logo */}
