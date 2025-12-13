@@ -5,6 +5,9 @@ import { Key, Lock, PlusCircle, ShieldCheck, Search } from 'lucide-react-native'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { navigate } from 'expo-router/build/global-state/routing';
 import { encryptPassword, decryptPassword } from './security/aesEncryption';
+import PasswordForm from './components/PasswordForm';
+
+
 
 
 const Home = () => {
@@ -12,33 +15,13 @@ const Home = () => {
         Montserrat_400Regular,
         Montserrat_700Bold,
     });
-
+    const time = Date.now()
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("All");
+    const [password, setPassword] = useState([])
 
-    const passwords = [
-        { id: '1', title: 'Facebook', username: 'ravi@example.com', category: 'Social' },
-        { id: '2', title: 'Gmail', username: 'ravi@gmail.com', category: 'Email' },
-        { id: '3', title: 'Instagram', username: 'silent_ravi', category: 'Social' },
-        { id: '4', title: 'Bank Account', username: 'ravi@bank.com', category: 'Banking' },
-    ];
 
-    const categories = ["All", "Social", "Email", "Banking", "Other"];
 
-    // Filter passwords
-    const filteredData = passwords.filter((item) => {
-        const matchCategory = category === "All" || item.category === category;
-        const matchSearch = item.title.toLowerCase().includes(search.toLowerCase());
-        return matchCategory && matchSearch;
-    });
-
-    function handleAddNew() {
-        navigate('/components/addPassword');
-    }
-
-    function handleViewPassword(id) {
-        navigate(`/components/viewPassword?id=${id}`);
-    }
     function handleEncrypt() {
         try {
             const response = encryptPassword()
@@ -62,7 +45,7 @@ const Home = () => {
             colors={['#131920', '#050f1a']}
             className="flex-1 items-center"
         >
-            <View className="min-h-screen w-[88%] pt-[60px] relative">
+            <View className="min-h-screen overflow-y-scroll w-[88%] pt-[60px] relative">
 
                 {/* Header */}
                 <View className="mb-[25px]">
@@ -75,10 +58,14 @@ const Home = () => {
                 </View>
 
 
-                <View>
+                {/* <View>
                     <TouchableOpacity onPress={handleEncrypt} className="bg-blue-500 py-2 "><Text>Encrypt</Text></TouchableOpacity>
                     <TouchableOpacity onPress={handleDecrypt} className="bg-blue-500 py-2 "><Text>Decrypt</Text></TouchableOpacity>
 
+                </View> */}
+
+                <View style={{ flex: 1 }} className="flex justify-center items-center">
+                    <PasswordForm />
                 </View>
 
 

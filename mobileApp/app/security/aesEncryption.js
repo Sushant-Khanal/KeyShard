@@ -5,15 +5,15 @@ import CryptoJS from "react-native-crypto-js";
 
 const key="abfa97973a9f4d3d120232bfb128221a49821af47abbcd8b4fa591699747119f"
 const encrypted="U2FsdGVkX1/soGPqX5ebrBxFPrBK/gT3ebQCwXLp5EpdW1StnsrreayjmIL8bIK1"
-const plainText="Hello Don Haru How Are You"
 
- export function encryptPassword(){
+
+ export function encryptPassword(data){
     
     try{
        
-        
+       
         const cipherText=  CryptoJS.AES.encrypt(
-            plainText,
+            data,
             key,
         ).toString()
 
@@ -24,13 +24,13 @@ const plainText="Hello Don Haru How Are You"
 }
 
 
-export function decryptPassword(){
+export function decryptPassword(data){
     
     try{
        
         
         const cipherText=  CryptoJS.AES.decrypt(
-            encrypted,
+            data,
             key,
         )
         let originalText = cipherText.toString(CryptoJS.enc.Utf8);
