@@ -11,6 +11,7 @@ import { navigate } from 'expo-router/build/global-state/routing'
 
 const Login = () => {
     const [password, setPassword] = useState('');
+    const [gmail, setGmail] = useState('')
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
@@ -46,6 +47,17 @@ const Login = () => {
 
                 {/* Master Password */}
                 <View className='flex mt-[10px] flex-col justify-center  items-center  w-4/5'>
+                    <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm mr-auto font-medium '>Gmail</Text>
+                    <TextInput
+                        secureTextEntry={true}
+                        style={{ fontFamily: 'Montserrat_400Regular' }}
+                        onChange={(e) => setPassword(e.target.value)}
+                        value={password}
+                        placeholder="Gmail linked to your vault"
+                        color={'white'}
+                        placeholderTextColor={'white'}
+                        height={40}
+                        className='w-full p-2 mb-5 focus:border focus:border-white focus:outline-none text-white mt-[10px] bg-gray-700 rounded-lg ' />
                     <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm mr-auto font-medium '>Master Password</Text>
                     <TextInput
                         secureTextEntry={true}

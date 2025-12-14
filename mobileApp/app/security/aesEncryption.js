@@ -3,14 +3,16 @@ import CryptoJS from "react-native-crypto-js";
 
 
 
-const key="abfa97973a9f4d3d120232bfb128221a49821af47abbcd8b4fa591699747119f"
-const encrypted="U2FsdGVkX1/soGPqX5ebrBxFPrBK/gT3ebQCwXLp5EpdW1StnsrreayjmIL8bIK1"
 
 
- export function encryptPassword(data){
+
+ export function encryptPassword(data,key){
     
     try{
-       
+        console.log("hot")
+        if(!key || !data){
+            return "Key and data missing for encryption"
+        }
        
         const cipherText=  CryptoJS.AES.encrypt(
             data,
@@ -24,7 +26,7 @@ const encrypted="U2FsdGVkX1/soGPqX5ebrBxFPrBK/gT3ebQCwXLp5EpdW1StnsrreayjmIL8bIK
 }
 
 
-export function decryptPassword(data){
+export function decryptPassword(data,key){
     
     try{
        

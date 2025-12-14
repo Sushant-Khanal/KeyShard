@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { navigate } from 'expo-router/build/global-state/routing'
 import genMasterKey from '../security/masterPass';
+import { encryptPassword } from '../security/aesEncryption';
 
 
 
@@ -17,8 +18,11 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [passwordStrength, setPasswordStrength] = useState("medium");
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [email, setEmail] = useState('')
+    const [passMatch, setpassMatch] = useState(true)
     const [loading, setLoading] = useState(false)
-    const [masterKey, setMasterKey] = useState();
+
+    const [error, setError] = useState(false)
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
@@ -26,18 +30,95 @@ const SignUp = () => {
     const suggestions = ['Add special characters', 'Use both upper & lower case']
 
     useEffect(() => {
+        console.log(loading)
+    }, [loading]);
 
-    }, [passwordStrength]);
+    useEffect(() => {
+        if (password && (password !== confirmPassword) && confirmPassword) {
+            setpassMatch(false)
+        } else {
+            setpassMatch(true)
+        }
+    }, [confirmPassword, password])
 
     const handleSignUp = async () => {
-
-        if (!password?.length) return
         setLoading(true)
-        const masterKey = genMasterKey(password);
-        setMasterKey(masterKey)
-        console.log("Hexadecimal: ", masterKey);
-        setLoading(false)
+        setError("")
+        if (!email.length || !password.length || !confirmPassword.length) {
+            setError("Please enter all the required fields")
+            setLoading(false)
+            return
+        }
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match")
+            setLoading(false)
+            return
+        }
+
+        try {
+            // Defer heavy crypto operations to next event loop iteration
+            // This allows setLoading(true) to update the UI first
+            const masterKey = await new Promise((resolve) => {
+                setImmediate(() => {
+                    const key = genMasterKey(password);
+                    resolve(key);
+                });
+            });
+
+            console.log("Hexadecimal: ", masterKey);
+            if (!masterKey.length) {
+                setError("Error generating Argon2I MasterKey")
+
+                return
+            }
+
+            const encryptedVault = await new Promise((resolve) => {
+                setImmediate(() => {
+                    const vault = encryptPassword(JSON.stringify([]), masterKey);
+                    resolve(vault);
+                });
+            });
+
+            console.log("Encrypted Vault: ", encryptedVault)
+            if (!encryptedVault.length) {
+                setError("Error generating secure vault")
+
+                return
+            }
+
+            const response = await fetch(`http://192.168.1.65:4000/api/signup`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": 'application/json'
+                },
+                body: JSON.stringify({ email: email, encryptedVault: encryptedVault })
+
+            }
+
+            )
+
+            const result = await response.json()
+            if (!response.ok) {
+                setError(result.message || "Signup failed")
+
+                return
+            }
+
+            console.log("Signup successful:", result)
+
+
+        } catch (error) {
+            console.error("Signup error:", error)
+            setError("Network error. Please try again.")
+
+        } finally {
+            setLoading(false)
+        }
+
     }
+
+
 
     return (
         <LinearGradient
@@ -53,7 +134,7 @@ const SignUp = () => {
                 </View>
 
                 {/* Middle Logo */}
-                <View className='flex justify-center items-center'>
+                <View className='flex justify-center mt-10 items-center'>
                     <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white justify-center items-center text-4xl font-bold '>Create Your Master </Text>
                     <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white justify-center items-center text-4xl font-bold '>Password</Text>
                 </View>
@@ -65,6 +146,21 @@ const SignUp = () => {
                 </View>
 
                 <View className='flex   w-full justify-center items-center mt-[30px]'>
+
+                    <View className='flex w-full  justify-center items-center'>
+                        <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >Email <Text className="font-extralight text-sm ">(Only used to link your vault)</Text></Text>
+                        <TextInput
+                            secureTextEntry={false}
+                            style={{ fontFamily: 'Montserrat_400Regular' }}
+                            onChangeText={(text) => setEmail(text.toLowerCase())}
+                            value={email}
+                            placeholder="Enter Password"
+                            color={'white'}
+                            placeholderTextColor={'white'}
+                            height={40}
+                            className='w-full p-2  text-white mt-[10px] bg-gray-700  focus:border focus:border-white focus:outline-none rounded-lg mb-5'
+                        />
+                    </View>
                     <View className='flex w-full  justify-center items-center'>
                         <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >New Master Password</Text>
                         <TextInput
@@ -92,6 +188,7 @@ const SignUp = () => {
                             height={40}
                             className='w-full p-2  text-white mt-[10px] bg-gray-700 focus:border focus:border-white focus:outline-none  rounded-lg p-2'
                         />
+                        {!passMatch && <Text className="text-red-500 mt-2 mr-auto">Password does not match</Text>}
                     </View>
                 </View>
 
@@ -134,14 +231,19 @@ const SignUp = () => {
                     ))}
                 </View>
 
-                <View>
+                {/* <View>
                     {masterKey && <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white mt-[5px] mr-auto text-md font-medium '>Master Key: {masterKey}</Text>}
-                </View>
+                </View> */}
+
+                {error && <View className="mt-2">
+                    <Text className="text-red-500 font-bold">{error}</Text>
+                </View>}
 
                 {/* Botttom Button */}
                 <TouchableOpacity
+                    disabled={loading}
                     onPress={handleSignUp}
-                    className='w-full absolute bottom-[20px] m-auto flex justify-center items-center p-3 text-white mt-[10px] bg-[#5783F3] rounded-md p-2'
+                    className={`w-full  absolute bottom-[20px] m-auto flex justify-center items-center p-3  mt-[10px] ${loading ? ("bg-[#283963] text-[#cecece]") : ("bg-[#5783F3] text-white")}  rounded-md p-2`}
                 >
                     <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white font-semibold text-xl'>Create Vault</Text>
                 </TouchableOpacity>
