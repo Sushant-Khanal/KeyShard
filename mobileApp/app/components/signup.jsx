@@ -16,11 +16,13 @@ import { encryptPassword } from '../security/aesEncryption';
 
 const SignUp = () => {
     const [password, setPassword] = useState('');
-    const [passwordStrength, setPasswordStrength] = useState("medium");
+    const [passwordStrength, setPasswordStrength] = useState("strong");
     const [confirmPassword, setConfirmPassword] = useState('');
     const [email, setEmail] = useState('')
     const [passMatch, setpassMatch] = useState(true)
     const [loading, setLoading] = useState(false)
+    const [success, setSuccess] = useState(false)
+
 
     const [error, setError] = useState(false)
     const [fontsLoaded] = useFonts({
@@ -34,6 +36,14 @@ const SignUp = () => {
     }, [loading]);
 
     useEffect(() => {
+        if (!success) return
+
+        setTimeout(() => {
+            navigate('/index')
+        }, 1500)
+    }, [success])
+
+    useEffect(() => {
         if (password && (password !== confirmPassword) && confirmPassword) {
             setpassMatch(false)
         } else {
@@ -44,6 +54,7 @@ const SignUp = () => {
     const handleSignUp = async () => {
         setLoading(true)
         setError("")
+        await new Promise(r => requestAnimationFrame(r))
         if (!email.length || !password.length || !confirmPassword.length) {
             setError("Please enter all the required fields")
             setLoading(false)
@@ -57,14 +68,10 @@ const SignUp = () => {
         }
 
         try {
-            // Defer heavy crypto operations to next event loop iteration
-            // This allows setLoading(true) to update the UI first
-            const masterKey = await new Promise((resolve) => {
-                setImmediate(() => {
-                    const key = genMasterKey(password);
-                    resolve(key);
-                });
-            });
+
+            const masterKey = genMasterKey(password);
+            await new Promise(r => setTimeout(r, 0))
+
 
             console.log("Hexadecimal: ", masterKey);
             if (!masterKey.length) {
@@ -73,12 +80,8 @@ const SignUp = () => {
                 return
             }
 
-            const encryptedVault = await new Promise((resolve) => {
-                setImmediate(() => {
-                    const vault = encryptPassword(JSON.stringify([]), masterKey);
-                    resolve(vault);
-                });
-            });
+            const encryptedVault = encryptPassword(JSON.stringify([]), masterKey);
+            await new Promise(r => setTimeout(r, 0))
 
             console.log("Encrypted Vault: ", encryptedVault)
             if (!encryptedVault.length) {
@@ -106,6 +109,7 @@ const SignUp = () => {
             }
 
             console.log("Signup successful:", result)
+            setSuccess(true)
 
 
         } catch (error) {
@@ -114,6 +118,9 @@ const SignUp = () => {
 
         } finally {
             setLoading(false)
+            setEmail("")
+            setPassword("")
+            setConfirmPassword("")
         }
 
     }
@@ -154,7 +161,7 @@ const SignUp = () => {
                             style={{ fontFamily: 'Montserrat_400Regular' }}
                             onChangeText={(text) => setEmail(text.toLowerCase())}
                             value={email}
-                            placeholder="Enter Password"
+                            placeholder="Enter Email"
                             color={'white'}
                             placeholderTextColor={'white'}
                             height={40}
@@ -238,6 +245,8 @@ const SignUp = () => {
                 {error && <View className="mt-2">
                     <Text className="text-red-500 font-bold">{error}</Text>
                 </View>}
+                {loading && <Text className="mt-5 text-white font-bold text-md">Encrypting your vault. This may take a moment…</Text>}
+                {success && <Text className="mt-5 text-white font-bold text-md">Vault Created Successfully. Navigating you to SignIn Page </Text>}
 
                 {/* Botttom Button */}
                 <TouchableOpacity
