@@ -31,18 +31,19 @@ router.post('/signup',async (req,res)=>{
           return  res.status(409).json({error:true,message:"Email is already registered"})
         }else {
             const [user]= await User.create([{
-                email:email
+                email:email,
+                 encryptedVault: encryptedVault
             }],{session})
 
-             const vault = await Vault.create([{
-             userId:user._id,
-             encryptedVault: encryptedVault
+        //     //  const vault = await Vault.create([{
+             
+        //     //  encryptedVault: encryptedVault
 
              
             
-        }],{session})
+        // }],{session})
             await session.commitTransaction()
-          res.status(201).json({error:false,message:"Created sucessfully"})
+          res.status(201).json({error:false,message:"Vault Created Sucessfully"})
         }
 
     }catch(error){

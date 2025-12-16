@@ -9,6 +9,10 @@ const UserSchema= new mongoose.Schema({
         trim: true,
         match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     },
+     encryptedVault:{
+        type:String,
+        required:true
+    },
      createdAt: {
     type: Date,
     default: Date.now
