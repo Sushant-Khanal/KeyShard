@@ -11,7 +11,10 @@ import { navigate } from 'expo-router/build/global-state/routing'
 
 const Login = () => {
     const [password, setPassword] = useState('');
-    const [gmail, setGmail] = useState('')
+    const [email, setEmail] = useState('')
+    const [error, setError] = useState('')
+    const [encryptedVault, setEncryptedVault] = useState('')
+    const [loading, setLoading] = useState(false)
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
@@ -21,9 +24,49 @@ const Login = () => {
         navigate('./components/signup')
     }
 
-    function handleUnlock() {
-        navigate('/home')
+    async function handleUnlock() {
+        try {
+
+            if (!email || !password) {
+                setError('Enter the email and password')
+                return
+            }
+
+            setLoading(true)
+            setError("")
+            await new Promise(r => requestAnimationFrame(r))
+
+            const response = await fetch(`http://192.168.1.65:4000/api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'Application/Json',
+                },
+                body: JSON.stringify({ email: email })
+
+
+            })
+
+            const result = await response.json()
+            if (!response.ok) {
+                return setError(result.message)
+            }
+
+            setEncryptedVault(result.message)
+
+        } catch (error) {
+            setError()
+        }
+
+
+
+
+
+
+
     }
+
+
+
 
     return (
         <LinearGradient
@@ -47,13 +90,13 @@ const Login = () => {
 
                 {/* Master Password */}
                 <View className='flex mt-[10px] flex-col justify-center  items-center  w-4/5'>
-                    <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm mr-auto font-medium '>Gmail</Text>
+                    <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='text-white text-sm mr-auto font-medium '>Email</Text>
                     <TextInput
                         secureTextEntry={true}
                         style={{ fontFamily: 'Montserrat_400Regular' }}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => setEmail(e.target.value)}
                         value={password}
-                        placeholder="Gmail linked to your vault"
+                        placeholder="Email linked to your vault"
                         color={'white'}
                         placeholderTextColor={'white'}
                         height={40}

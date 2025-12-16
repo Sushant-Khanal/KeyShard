@@ -39,7 +39,7 @@ const SignUp = () => {
         if (!success) return
 
         setTimeout(() => {
-            navigate('/index')
+            navigate('/')
         }, 1500)
     }, [success])
 
@@ -67,12 +67,12 @@ const SignUp = () => {
             return
         }
 
+
+
         try {
 
+
             const masterKey = genMasterKey(password);
-            await new Promise(r => setTimeout(r, 0))
-
-
             console.log("Hexadecimal: ", masterKey);
             if (!masterKey.length) {
                 setError("Error generating Argon2I MasterKey")
@@ -80,9 +80,7 @@ const SignUp = () => {
                 return
             }
 
-            const encryptedVault = encryptPassword(JSON.stringify([]), masterKey);
-            await new Promise(r => setTimeout(r, 0))
-
+            const encryptedVault = encryptPassword(JSON.stringify([]), masterKey)
             console.log("Encrypted Vault: ", encryptedVault)
             if (!encryptedVault.length) {
                 setError("Error generating secure vault")
@@ -90,13 +88,16 @@ const SignUp = () => {
                 return
             }
 
+
+
+
+
             const response = await fetch(`http://192.168.1.65:4000/api/signup`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": 'application/json'
                 },
                 body: JSON.stringify({ email: email, encryptedVault: encryptedVault })
-
             }
 
             )
@@ -159,7 +160,7 @@ const SignUp = () => {
                         <TextInput
                             secureTextEntry={false}
                             style={{ fontFamily: 'Montserrat_400Regular' }}
-                            onChangeText={(text) => setEmail(text.toLowerCase())}
+                            onChangeText={(text) => setEmail(text)}
                             value={email}
                             placeholder="Enter Email"
                             color={'white'}
