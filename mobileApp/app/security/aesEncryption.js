@@ -39,7 +39,8 @@ export async  function decryptPassword(encryptedVault,vaultKey,iv,tag){
         tag,
         false
     )
-    console.log(decryptedVault)
+    console.log("VaultLength: ",decryptedVault.length)
+    return decryptedVault
    }catch(error){
     console.log(error)
    }
