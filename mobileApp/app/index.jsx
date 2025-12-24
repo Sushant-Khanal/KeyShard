@@ -97,6 +97,17 @@ const Login = () => {
             console.log("encrypted:", encryptedVault, '\niv:', iv, 'tag:', tag)
 
             const decryptedVault = await decryptPassword(encryptedVault, vaultKey, iv, tag)
+            console.log("decryptedVault: ", decryptedVault)
+            if (!decryptedVault) {
+                setError("Failed to decrypt your vault")
+                return
+            }
+
+            setStatus("Success, Loading you vault")
+            setTimeout(() => {
+                navigate('/home')
+            }, 1000)
+
 
 
         } catch (error) {
@@ -114,11 +125,11 @@ const Login = () => {
             <View className="flex-1 w-full px-6 py-8 justify-between">
 
                 {/* Header */}
-                <View className="flex-row items-center mt-10 justify-center gap-3">
+                <View className="flex-row   items-center mt-10   justify-center gap-3">
                     <Key color="white" size={32} strokeWidth={2} />
                     <Text
                         style={{ fontFamily: 'Montserrat_700Bold' }}
-                        className="text-white text-3xl"
+                        className="text-white text-3xl  "
                     >
                         KeyShards
                     </Text>
