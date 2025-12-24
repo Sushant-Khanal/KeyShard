@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import connectdb from './middleware/dbConnection.js'
 import userSignupRoute from './routes/userSignUp.js'
+import userLoginRoute from './routes/userLogin.js'
 dotenv.config()
 
 const app= express()
@@ -9,6 +10,7 @@ connectdb()
 const PORT= process.env.PORT
 app.use(express.json())
 app.use('/api',userSignupRoute)
+app.use('/api',userLoginRoute)
 
 
 app.listen(PORT,()=>{
