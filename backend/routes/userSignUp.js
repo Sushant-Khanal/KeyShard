@@ -2,6 +2,7 @@ import express from 'express'
 import User from '../schema/User.js'
 import mongoose from 'mongoose'
 import Vault from '../schema/Vault.js'
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const router = express.Router()
 
@@ -9,9 +10,10 @@ const router = express.Router()
 router.post('/signup',async (req,res)=>{
     const session= await mongoose.startSession();
     try{
-        const {email, encryptedVault}= req.body
+        const {email, encryptedVault,iv,tag,userHash,salt}= req.body
+        console.log('backendalt:',salt)
 
-        if(!email || !encryptedVault){
+        if(!email || !encryptedVault || !userHash ){
           return  res.status(400).json({
             error:true,
             message:"Vault and Email must be provided"
@@ -32,16 +34,14 @@ router.post('/signup',async (req,res)=>{
         }else {
             const [user]= await User.create([{
                 email:email,
-                 encryptedVault: encryptedVault
+                 encryptedVault: encryptedVault,
+                 iv:iv,
+                 userHash:userHash,
+                 tag:tag,
+                 salt:salt
             }],{session})
 
-        //     //  const vault = await Vault.create([{
-             
-        //     //  encryptedVault: encryptedVault
-
-             
-            
-        // }],{session})
+       
             await session.commitTransaction()
           res.status(201).json({error:false,message:"Vault Created Sucessfully"})
         }

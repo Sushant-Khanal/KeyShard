@@ -13,6 +13,23 @@ const UserSchema= new mongoose.Schema({
         type:String,
         required:true
     },
+      iv:{
+        type:String,
+        required:true
+    },
+     tag:{
+        type:String,
+        required:true
+    },
+    salt:{
+        type:String,
+        required:true
+    },
+      userHash:{
+        type:String,
+        unique:true,
+        required:true
+    },
      createdAt: {
     type: Date,
     default: Date.now
