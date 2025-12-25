@@ -4,8 +4,8 @@ import { Text, View, TouchableOpacity, FlatList, Image, TextInput } from 'react-
 import { Key, Lock, PlusCircle, ShieldCheck, Search } from 'lucide-react-native';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 import { navigate } from 'expo-router/build/global-state/routing';
-import { encryptPassword, decryptPassword } from './security/aesEncryption';
-import PasswordForm from './components/PasswordForm';
+import { encryptPassword, decryptPassword } from '../security/aesEncryption';
+import PasswordForm from '../components/PasswordForm';
 
 
 
