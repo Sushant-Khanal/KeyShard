@@ -6,6 +6,8 @@ import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-googl
 import { navigate } from 'expo-router/build/global-state/routing'
 import genMasterKey from './security/masterPass'
 import { decryptPassword } from './security/aesEncryption'
+import { setSession } from './security/secureStore'
+
 
 const Login = () => {
     const [password, setPassword] = useState('')
@@ -17,6 +19,8 @@ const Login = () => {
     const [encryptedVault, setEncryptedVault] = useState('')
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState('')
+
+
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -103,9 +107,12 @@ const Login = () => {
                 return
             }
 
-            setStatus("Success, Loading you vault")
+            setStatus("Success, Loading your vault...")
+            const data = { vaultKey, iv, tag, salt, userHash }
+            setSession(data)
+
             setTimeout(() => {
-                navigate('/home')
+                navigate('/(protected)/home')
             }, 1000)
 
 
@@ -114,6 +121,7 @@ const Login = () => {
             console.log(error)
         } finally {
             setLoading(false)
+
         }
     }
 
