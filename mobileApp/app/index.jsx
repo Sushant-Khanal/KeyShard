@@ -107,12 +107,18 @@ const Login = () => {
                 return
             }
 
+<<<<<<< HEAD
             setStatus("Success, Loading your vault...")
             const data = { vaultKey, iv, tag, salt, userHash }
             setSession(data)
 
             setTimeout(() => {
                 navigate('/(protected)/home')
+=======
+            setStatus("Success, Loading you vault")
+            setTimeout(() => {
+                navigate('/home')
+>>>>>>> 4525c2dab2fc4fc224300010b23bcd6b1ff4c188
             }, 1000)
 
 
