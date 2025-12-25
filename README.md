@@ -1,5 +1,15 @@
 # KeyShards
 
+  ## User Flow
+  
+  ### Signup Flow
+  
+  ![SignUp Flow](/mobileApp/assets/images/signupflow.png)
+  
+  ### Login Flow
+  
+  ![Login Flow](/mobileApp/assets/images/loginflow.png)
+
 # Gallery
  ## SignIn Page Mobile
 ![Sign In Page](/mobileApp/assets/images/SigninPage.jpg)
