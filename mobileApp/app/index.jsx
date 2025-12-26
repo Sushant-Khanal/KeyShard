@@ -6,7 +6,7 @@ import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-googl
 import { navigate } from 'expo-router/build/global-state/routing'
 import genMasterKey from './security/masterPass'
 import { decryptPassword } from './security/aesEncryption'
-import { setSession } from './security/secureStore'
+import { getSession, setSession } from './security/secureStore'
 
 
 const Login = () => {
@@ -112,7 +112,10 @@ const Login = () => {
             setSession(data)
 
             setTimeout(() => {
-                navigate('/(protected)/home')
+                const session = getSession()
+                if (session?.vaultKey) {
+                    navigate('/(protected)/home')
+                }
             }, 1000)
 
 
