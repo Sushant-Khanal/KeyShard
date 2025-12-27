@@ -3,8 +3,12 @@ const router= express.Router()
 import User from '../schema/User.js'
 import Vault from '../schema/Vault.js'
 import mongoose from 'mongoose'
+import rateLimiter from '../middleware/rateLimit.js'
+import emailRateLimiter from '../middleware/emailRareLimit.js'
 
-router.post('/login', async (req,res)=>{
+
+
+router.post('/login', rateLimiter({secondWindow:60,allowedHits:20}),emailRateLimiter({secondWindow:60,allowedHits:5}), async (req,res)=>{
     console.log("Hitttttt")
     try{
         const {email}=req.body
