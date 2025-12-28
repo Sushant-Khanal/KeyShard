@@ -9,7 +9,7 @@ import genMasterKey from '../security/masterPass';
 import { encryptPassword } from '../security/aesEncryption';
 import * as Crypto from 'expo-crypto';
 import { fromByteArray } from 'react-native-quick-base64';
-
+import Constants from 'expo-constants';
 
 
 
@@ -18,6 +18,7 @@ import { fromByteArray } from 'react-native-quick-base64';
 
 
 const SignUp = () => {
+    const { localhost } = Constants.expoConfig.extra
     const [password, setPassword] = useState('');
     const [passwordStrength, setPasswordStrength] = useState("strong");
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -99,7 +100,7 @@ const SignUp = () => {
 
 
 
-            const response = await fetch(`http://192.168.1.65:4000/api/signup`, {
+            const response = await fetch(`http://${localhost}:4000/api/signup`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": 'application/json'

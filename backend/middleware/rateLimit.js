@@ -7,7 +7,7 @@ import redis from './redis-client.js'
     }
 
 function rateLimiter({secondWindow,allowedHits}){
-
+    console.log("ratelimiter hit ip based")
     return async function (req,res,next){
 
         try{
