@@ -9,7 +9,7 @@ import crypto from 'crypto'
     }
 
 function emailRateLimiter({secondWindow,allowedHits}){
-
+    console.log("email based rate limiter hit")
     return async function (req,res,next){
 
         try{

@@ -7,9 +7,12 @@ import { navigate } from 'expo-router/build/global-state/routing'
 import genMasterKey from './security/masterPass'
 import { decryptPassword } from './security/aesEncryption'
 import { getSession, setSession } from './security/secureStore'
+import Constants from 'expo-constants'
 
 
 const Login = () => {
+
+    const { localhost } = Constants.expoConfig.extra
     const [password, setPassword] = useState('')
     const [email, setEmail] = useState('')
     const [iv, setIv] = useState('')
@@ -45,9 +48,9 @@ const Login = () => {
             }
             setError("")
             setLoading(true)
-
+            console.log(localhost)
             setStatus("Fetching the salt...")
-            const responseInitial = await fetch(`http://192.168.1.65:4000/api/login`, {
+            const responseInitial = await fetch(`http://${localhost}:4000/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -79,7 +82,7 @@ const Login = () => {
 
 
             setStatus("Authenticating the user...")
-            const responseFinal = await fetch(`http://192.168.1.65:4000/api/login`, {
+            const responseFinal = await fetch(`http://${localhost}:4000/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

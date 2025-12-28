@@ -7,9 +7,11 @@ import { encryptPassword, decryptPassword } from "../security/aesEncryption"
 import { getSession, setSession } from "../security/secureStore"
 import { navigate } from "expo-router/build/global-state/routing"
 import { fromByteArray } from "react-native-quick-base64"
-
+import Constants from 'expo-constants';
 
 const PasswordForm = ({ handleUpdatedPassword }) => {
+
+    const { localhost } = Constants.expoConfig.extra;
     const [tab, setTab] = useState(false)
     const [passwordVisibility, setPasswordVisibility] = useState(true)
     const [password, setPassword] = useState([])
@@ -52,7 +54,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                 navigate('/')
             }
 
-            const response = await fetch(`http://192.168.1.65:4000/api/passFetch`, {
+            const response = await fetch(`http://${localhost}:4000/api/passFetch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -99,7 +101,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
             setSession({ iv: iv, tag: tag, vaultKey: fromByteArray(session?.vaultKey), userHash: session?.userHash, salt: session?.salt })
             console.log("newpasssecure: ", encryptedVault)
 
-            const response = await fetch(`http://192.168.1.65:4000/api/newPassword`, {
+            const response = await fetch(`http://${localhost}:4000/api/newPassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

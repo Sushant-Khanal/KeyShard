@@ -52,7 +52,8 @@ module.exports = {
       reactCompiler: true
     },
     extra: {
-      ARGON_SALT: process.env.ARGON_SALT
+      ARGON_SALT: process.env.ARGON_SALT,
+      localhost: process.env.IP
     }
   }
 };
