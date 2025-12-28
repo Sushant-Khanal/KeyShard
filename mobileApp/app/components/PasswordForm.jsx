@@ -4,13 +4,22 @@ import { useForm, Controller } from "react-hook-form"
 import React, { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff } from "lucide-react-native"
 import { encryptPassword, decryptPassword } from "../security/aesEncryption"
+import { getSession, setSession } from "../security/secureStore"
+import { navigate } from "expo-router/build/global-state/routing"
+import { fromByteArray } from "react-native-quick-base64"
+import Constants from 'expo-constants';
 
+const PasswordForm = ({ handleUpdatedPassword }) => {
 
-const PasswordForm = () => {
+    const { localhost } = Constants.expoConfig.extra;
     const [tab, setTab] = useState(false)
     const [passwordVisibility, setPasswordVisibility] = useState(true)
     const [password, setPassword] = useState([])
 
+    const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
+
+    const passRef = useRef(password)
 
 
 
@@ -23,6 +32,7 @@ const PasswordForm = () => {
     } = useForm({
         mode: "onChange",
         defaultValues: {
+            id: Date.now().toString() + Math.random().toString(36),
             title: '',
             username: '',
             password: '',
@@ -37,13 +47,104 @@ const PasswordForm = () => {
         },
     })
 
+    async function handleVaultFetch() {
+        try {
+            const session = getSession()
+            if (!session?.vaultKey) {
+                navigate('/')
+            }
+
+            const response = await fetch(`http://${localhost}:4000/api/passFetch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userHash: session?.userHash })
+            })
+
+            const result = await response.json()
+            if (!response.ok) {
+                return setError("Faild to load your vault")
+            }
+
+            const { encryptedVault, iv, tag } = result?.message
+
+            const fetchedPassword = await decryptPassword(encryptedVault, fromByteArray(session?.vaultKey), iv, tag)
+
+            if (!fetchedPassword) {
+                return setError("Failed to decrypt the vault")
+            }
+
+            setPassword(JSON.parse(fetchedPassword))
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    useEffect(() => {
+
+        handleVaultFetch()
+
+    }, [])
+
+
+    async function handleNewPassword(session) {
+        try {
+
+            const encrypt = await encryptPassword(JSON.stringify(password), fromByteArray(session?.vaultKey))
+            if (!encrypt) {
+                return setError('Failed to encrypt your vault')
+            }
+
+            const { encryptedVault, iv, tag } = encrypt
+            setSession({ iv: iv, tag: tag, vaultKey: fromByteArray(session?.vaultKey), userHash: session?.userHash, salt: session?.salt })
+            console.log("newpasssecure: ", encryptedVault)
+
+            const response = await fetch(`http://${localhost}:4000/api/newPassword`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ encryptedVault: encryptedVault, iv: iv, tag: tag, userHash: session.userHash })
+            })
+
+            const result = await response.json()
+            if (!response.ok) {
+                return setError(result.message)
+            }
+
+            setSuccess(result.message)
+            handleUpdatedPassword(password)
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
 
 
 
 
+    useEffect(() => {
+
+        console.log(password)
+        if ((passRef.current !== password) && password.length > 0) {
+            console.log(password)
+
+            const session = getSession()
+            if (session?.vaultKey) {
+                console.log('no session')
+            }
+            console.log('session')
+            handleNewPassword(session)
 
 
+        }
+
+        passRef.current = password
+
+    }, [password])
 
 
 
@@ -52,15 +153,12 @@ const PasswordForm = () => {
         setTab(false)
 
         setPassword(prev => {
-            const updatedVault = [...prev, data]
+            const updatedVault = [...prev, {
+                ...data,
+                id: Date.now().toString() + Math.random().toString(36),
+                createdAt: new Date().toISOString()
+            }]
 
-
-            const encrypted = encryptPassword(JSON.stringify(updatedVault))
-            console.log("Encrypted: ", encrypted)
-
-
-            const decrypted = decryptPassword(encrypted)
-            console.log("\n\n\n\n\nDecrypted: ", decrypted)
 
             return updatedVault
         })

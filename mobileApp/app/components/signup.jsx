@@ -1,32 +1,39 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { Key } from "lucide-react-native";
-import React, { useEffect } from "react";
-import { Text, TextInput, View, Button, TouchableOpacity } from "react-native";
-import { useState } from "react";
-import {
-  useFonts,
-  Montserrat_400Regular,
-  Montserrat_700Bold,
-} from "@expo-google-fonts/montserrat";
-import { navigate } from "expo-router/build/global-state/routing";
-import genMasterKey from "../security/masterPass";
-import { encryptPassword } from "../security/aesEncryption";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Key } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { Text, TextInput, View, Button, TouchableOpacity } from 'react-native'
+import { useState } from 'react'
+import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
+import { navigate } from 'expo-router/build/global-state/routing'
+import genMasterKey from '../security/masterPass';
+import { encryptPassword } from '../security/aesEncryption';
+import * as Crypto from 'expo-crypto';
+import { fromByteArray } from 'react-native-quick-base64';
+import Constants from 'expo-constants';
+
+
+
+
+
+
 
 const SignUp = () => {
-  const [password, setPassword] = useState("");
-  const [passwordStrength, setPasswordStrength] = useState("strong");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [passMatch, setpassMatch] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+    const { localhost } = Constants.expoConfig.extra
+    const [password, setPassword] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState("strong");
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [email, setEmail] = useState('')
+    const [passMatch, setpassMatch] = useState(true)
+    const [loading, setLoading] = useState(false)
+    const [success, setSuccess] = useState(false)
 
-  const [error, setError] = useState(false);
-  const [fontsLoaded] = useFonts({
-    Montserrat_400Regular,
-    Montserrat_700Bold,
-  });
-  const suggestions = ["Add special characters", "Use both upper & lower case"];
+
+    const [error, setError] = useState(false)
+    const [fontsLoaded] = useFonts({
+        Montserrat_400Regular,
+        Montserrat_700Bold,
+    })
+    const suggestions = ['Add special characters', 'Use both upper & lower case']
 
   useEffect(() => {
     console.log(loading);
@@ -35,10 +42,10 @@ const SignUp = () => {
   useEffect(() => {
     if (!success) return;
 
-    setTimeout(() => {
-      navigate("/index");
-    }, 1500);
-  }, [success]);
+        setTimeout(() => {
+            navigate('/')
+        }, 1500)
+    }, [success])
 
   useEffect(() => {
     if (password && password !== confirmPassword && confirmPassword) {
@@ -58,58 +65,73 @@ const SignUp = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
+        if (password !== confirmPassword) {
+            setError("Passwords do not match")
+            setLoading(false)
+            return
+        }
 
-    try {
-      const masterKey = genMasterKey(password);
-      await new Promise((r) => setTimeout(r, 0));
 
-      console.log("Hexadecimal: ", masterKey);
-      if (!masterKey.length) {
-        setError("Error generating Argon2I MasterKey");
 
-        return;
-      }
+        try {
 
-      const encryptedVault = encryptPassword(JSON.stringify([]), masterKey);
-      await new Promise((r) => setTimeout(r, 0));
+            const salt = fromByteArray(Crypto.getRandomValues(new Uint8Array(32)))
 
-      console.log("Encrypted Vault: ", encryptedVault);
-      if (!encryptedVault.length) {
-        setError("Error generating secure vault");
+
+            const { vaultKey, userHash } = genMasterKey(password, salt);
+
+            if (!vaultKey, !userHash) {
+                setError("Error generating Argon2I MasterKey")
 
         return;
       }
 
-      const response = await fetch(`http://192.168.1.100:4000/api/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: email, encryptedVault: encryptedVault }),
-      });
 
-      const result = await response.json();
-      if (!response.ok) {
-        setError(result.message || "Signup failed");
+
+            const { encryptedVault, iv, tag } = await encryptPassword(JSON.stringify([]), vaultKey)
+            console.log("Encrypted Vault: ", encryptedVault)
+            if (!encryptedVault.length) {
+                setError("Error generating secure vault")
 
         return;
       }
 
-      console.log("Signup successful:", result);
-      setSuccess(true);
-    } catch (error) {
-      console.error("Signup error:", error);
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+
+
+
+
+            const response = await fetch(`http://${localhost}:4000/api/signup`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": 'application/json'
+                },
+                body: JSON.stringify({ email: email, encryptedVault: encryptedVault, iv: iv, tag: tag, userHash: userHash, salt: salt })
+            }
+
+            )
+
+            const result = await response.json()
+            if (!response.ok) {
+                setError(result.message || "Signup failed")
+
+                return
+            }
+
+            console.log("Signup successful:", result)
+            setSuccess(true)
+
+
+        } catch (error) {
+            console.error("Signup error:", error)
+            setError("Internal Error. Please try again.")
+
+        } finally {
+            setLoading(false)
+            setEmail("")
+            setPassword("")
+            setConfirmPassword("")
+        }
+
     }
   };
 
@@ -164,73 +186,52 @@ const SignUp = () => {
           </Text>
         </View>
 
-        <View className="flex   w-full justify-center items-center mt-[30px]">
-          <View className="flex w-full  justify-center items-center">
-            <Text
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              className="mr-auto text-white text-sm font-medium "
-            >
-              Email{" "}
-              <Text className="font-extralight text-sm ">
-                (Only used to link your vault)
-              </Text>
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              onChangeText={(text) => setEmail(text)}
-              value={email}
-              placeholder="Enter Email"
-              color={"white"}
-              placeholderTextColor={"white"}
-              height={40}
-              className="w-full p-2  text-white mt-[10px] bg-gray-700  focus:border focus:border-white focus:outline-none rounded-lg mb-5"
-            />
-          </View>
-          <View className="flex w-full  justify-center items-center">
-            <Text
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              className="mr-auto text-white text-sm font-medium "
-            >
-              New Master Password
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              onChangeText={(text) => setPassword(text)}
-              value={password}
-              placeholder="Enter Password"
-              color={"white"}
-              placeholderTextColor={"white"}
-              height={40}
-              className="w-full p-2  text-white mt-[10px] bg-gray-700  focus:border focus:border-white focus:outline-none rounded-lg p-2"
-            />
-          </View>
-          <View className="flex mt-[20px] w-full justify-center items-center">
-            <Text
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              className="mr-auto text-white text-sm font-medium "
-            >
-              Confirm Password
-            </Text>
-            <TextInput
-              secureTextEntry={false}
-              style={{ fontFamily: "Montserrat_400Regular" }}
-              onChangeText={(text) => setConfirmPassword(text)}
-              value={confirmPassword}
-              placeholder="Re-Enter Password"
-              color={"white"}
-              placeholderTextColor={"white"}
-              height={40}
-              className="w-full p-2  text-white mt-[10px] bg-gray-700 focus:border focus:border-white focus:outline-none  rounded-lg p-2"
-            />
-            {!passMatch && (
-              <Text className="text-red-500 mt-2 mr-auto">
-                Password does not match
-              </Text>
-            )}
-          </View>
-        </View>
+                <View className='flex   w-full justify-center items-center mt-[30px]'>
+
+                    <View className='flex w-full  justify-center items-center'>
+                        <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >Email <Text className="font-extralight text-sm ">(Only used to link your vault)</Text></Text>
+                        <TextInput
+                            secureTextEntry={false}
+                            style={{ fontFamily: 'Montserrat_400Regular' }}
+                            onChangeText={(text) => setEmail(text)}
+                            value={email}
+                            placeholder="Enter Email"
+                            color={'white'}
+                            placeholderTextColor={'white'}
+                            height={40}
+                            className='w-full p-2  text-white mt-[10px] bg-gray-700  focus:border focus:border-white focus:outline-none rounded-lg mb-5'
+                        />
+                    </View>
+                    <View className='flex w-full  justify-center items-center'>
+                        <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >New Master Password</Text>
+                        <TextInput
+                            secureTextEntry={false}
+                            style={{ fontFamily: 'Montserrat_400Regular' }}
+                            onChangeText={(text) => setPassword(text)}
+                            value={password}
+                            placeholder="Enter Password"
+                            color={'white'}
+                            placeholderTextColor={'white'}
+                            height={40}
+                            className='w-full p-2  text-white mt-[10px] bg-gray-700  focus:border focus:border-white focus:outline-none rounded-lg p-2'
+                        />
+                    </View>
+                    <View className='flex mt-[20px] w-full justify-center items-center'>
+                        <Text style={{ fontFamily: 'Montserrat_400Regular' }} className='mr-auto text-white text-sm font-medium ' >Confirm Password</Text>
+                        <TextInput
+                            secureTextEntry={false}
+                            style={{ fontFamily: 'Montserrat_400Regular' }}
+                            onChangeText={(text) => setConfirmPassword(text)}
+                            value={confirmPassword}
+                            placeholder="Re-Enter Password"
+                            color={'white'}
+                            placeholderTextColor={'white'}
+                            height={40}
+                            className='w-full p-2  text-white mt-[10px] bg-gray-700 focus:border focus:border-white focus:outline-none  rounded-lg p-2'
+                        />
+                        {!passMatch && <Text className="text-red-500 mt-2 mr-auto">Password does not match</Text>}
+                    </View>
+                </View>
 
         {/* Password Strength */}
         <View className="flex mt-[30px] w-full justify-center items-center">
@@ -302,22 +303,17 @@ const SignUp = () => {
           </Text>
         )}
 
-        {/* Botttom Button */}
-        <TouchableOpacity
-          disabled={loading}
-          onPress={handleSignUp}
-          className={`w-full  absolute bottom-[20px] m-auto flex justify-center items-center p-3  mt-[10px] ${loading ? "bg-[#283963] text-[#cecece]" : "bg-[#5783F3] text-white"}  rounded-md p-2`}
-        >
-          <Text
-            style={{ fontFamily: "Montserrat_700Bold" }}
-            className="text-white font-semibold text-xl"
-          >
-            Create Vault
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
-  );
+                {/* Botttom Button */}
+                <TouchableOpacity
+                    disabled={loading}
+                    onPress={handleSignUp}
+                    className={`w-full  absolute bottom-[20px] m-auto flex justify-center items-center p-3  mb-[50px] ${loading ? ("bg-[#283963] text-[#cecece]") : ("bg-[#5783F3] text-white")}  rounded-md p-2`}
+                >
+                    <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white font-semibold text-xl'>Create Vault</Text>
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
+    );
 };
 
 export default SignUp;
