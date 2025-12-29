@@ -90,7 +90,7 @@ const SignUp = () => {
                 return
             }
 
-            const response = await fetch(`http://192.168.1.65:4000/api/signup`, {
+            const response = await fetch(`http://192.168.1.77:4000/api/signup`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": 'application/json'
@@ -159,7 +159,7 @@ const SignUp = () => {
                         <TextInput
                             secureTextEntry={false}
                             style={{ fontFamily: 'Montserrat_400Regular' }}
-                            onChangeText={(text) => setEmail(text.toLowerCase())}
+                            onChangeText={(text) => setEmail(text)}
                             value={email}
                             placeholder="Enter Email"
                             color={'white'}
