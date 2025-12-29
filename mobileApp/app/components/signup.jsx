@@ -7,6 +7,9 @@ import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-googl
 import { navigate } from 'expo-router/build/global-state/routing'
 import genMasterKey from '../security/masterPass';
 import { encryptPassword } from '../security/aesEncryption';
+import * as Crypto from 'expo-crypto';
+import { fromByteArray } from 'react-native-quick-base64';
+import Constants from 'expo-constants';
 
 
 
@@ -15,6 +18,7 @@ import { encryptPassword } from '../security/aesEncryption';
 
 
 const SignUp = () => {
+    const { localhost } = Constants.expoConfig.extra
     const [password, setPassword] = useState('');
     const [passwordStrength, setPasswordStrength] = useState("strong");
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,7 +43,7 @@ const SignUp = () => {
         if (!success) return
 
         setTimeout(() => {
-            navigate('/index')
+            navigate('/')
         }, 1500)
     }, [success])
 
@@ -67,22 +71,24 @@ const SignUp = () => {
             return
         }
 
+
+
         try {
 
-            const masterKey = genMasterKey(password);
-            await new Promise(r => setTimeout(r, 0))
+            const salt = fromByteArray(Crypto.getRandomValues(new Uint8Array(32)))
 
 
-            console.log("Hexadecimal: ", masterKey);
-            if (!masterKey.length) {
+            const { vaultKey, userHash } = genMasterKey(password, salt);
+
+            if (!vaultKey, !userHash) {
                 setError("Error generating Argon2I MasterKey")
 
                 return
             }
 
-            const encryptedVault = encryptPassword(JSON.stringify([]), masterKey);
-            await new Promise(r => setTimeout(r, 0))
 
+
+            const { encryptedVault, iv, tag } = await encryptPassword(JSON.stringify([]), vaultKey)
             console.log("Encrypted Vault: ", encryptedVault)
             if (!encryptedVault.length) {
                 setError("Error generating secure vault")
@@ -90,13 +96,16 @@ const SignUp = () => {
                 return
             }
 
-            const response = await fetch(`http://192.168.1.77:4000/api/signup`, {
+
+
+
+
+            const response = await fetch(`http://${localhost}:4000/api/signup`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": 'application/json'
                 },
-                body: JSON.stringify({ email: email, encryptedVault: encryptedVault })
-
+                body: JSON.stringify({ email: email, encryptedVault: encryptedVault, iv: iv, tag: tag, userHash: userHash, salt: salt })
             }
 
             )
@@ -114,7 +123,7 @@ const SignUp = () => {
 
         } catch (error) {
             console.error("Signup error:", error)
-            setError("Network error. Please try again.")
+            setError("Internal Error. Please try again.")
 
         } finally {
             setLoading(false)
@@ -252,7 +261,7 @@ const SignUp = () => {
                 <TouchableOpacity
                     disabled={loading}
                     onPress={handleSignUp}
-                    className={`w-full  absolute bottom-[20px] m-auto flex justify-center items-center p-3  mt-[10px] ${loading ? ("bg-[#283963] text-[#cecece]") : ("bg-[#5783F3] text-white")}  rounded-md p-2`}
+                    className={`w-full  absolute bottom-[20px] m-auto flex justify-center items-center p-3  mb-[50px] ${loading ? ("bg-[#283963] text-[#cecece]") : ("bg-[#5783F3] text-white")}  rounded-md p-2`}
                 >
                     <Text style={{ fontFamily: 'Montserrat_700Bold' }} className='text-white font-semibold text-xl'>Create Vault</Text>
                 </TouchableOpacity>

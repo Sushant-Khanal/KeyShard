@@ -20,6 +20,7 @@ module.exports = {
         backgroundImage: "./assets/images/android-icon-background.png",
         monochromeImage: "./assets/images/android-icon-monochrome.png"
       },
+      package: "com.anonymous.mobileApp",
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false
     },
@@ -31,6 +32,7 @@ module.exports = {
     plugins: [
       "expo-secure-store",
       "expo-router",
+      "expo-web-browser",
       [
         "expo-splash-screen",
         {
@@ -50,7 +52,8 @@ module.exports = {
       reactCompiler: true
     },
     extra: {
-      ARGON_SALT: process.env.ARGON_SALT
+      ARGON_SALT: process.env.ARGON_SALT,
+      localhost: process.env.IP
     }
   }
 };

@@ -1,4 +1,4 @@
-import CryptoJS from "react-native-crypto-js";
+import AesGcmCrypto from 'react-native-aes-gcm-crypto';
 
 
 
@@ -6,42 +6,44 @@ import CryptoJS from "react-native-crypto-js";
 
 
 
- export function encryptPassword(data,key){
+ export async  function encryptPassword(data,key){
     
     try{
-        console.log("hot")
+        console.log(typeof(data))
         if(!key || !data){
             return "Key and data missing for encryption"
         }
-       
-        const cipherText=  CryptoJS.AES.encrypt(
-            data,
+      
+        const StringData= typeof(data)==='string'? data:JSON.stringify(data)
+        console.log(key)
+        const {iv,tag,content}= await AesGcmCrypto.encrypt(
+            StringData,
+            false,
             key,
-        ).toString()
 
-        return cipherText
-    }catch(error){
-        console.log(error)
-    }
-}
-
-
-export function decryptPassword(data,key){
-    
-    try{
-       
-        
-        const cipherText=  CryptoJS.AES.decrypt(
-            data,
-            key,
         )
-        let originalText = cipherText.toString(CryptoJS.enc.Utf8);
-
-        return originalText
+       
+        return {encryptedVault:content,iv,tag}
     }catch(error){
         console.log(error)
     }
 }
 
+
+export async  function decryptPassword(encryptedVault,vaultKey,iv,tag){
+   try{
+    const decryptedVault= await AesGcmCrypto.decrypt(
+        encryptedVault,
+        vaultKey,
+        iv,
+        tag,
+        false
+    )
+    console.log("VaultLength: ",decryptedVault.length)
+    return decryptedVault
+   }catch(error){
+    console.log(error)
+   }
+}
 
 
