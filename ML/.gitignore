@@ -127,3 +127,5 @@ checkpoint/
 logs/
 tensorboard/
 wandb/
+
+password_strength_xgb.json
