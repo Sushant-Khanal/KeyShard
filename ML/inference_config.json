@@ -1,0 +1,12 @@
+{
+    "classes": [
+        "Weak",
+        "Medium",
+        "Strong"
+    ],
+    "weak_threshold": 0.42,
+    "decision_rule": "if P(Weak) >= threshold \u2192 Weak else argmax",
+    "num_features": 14,
+    "model": "XGBoost",
+    "notes": "Security-adjusted post-processing threshold"
+}
