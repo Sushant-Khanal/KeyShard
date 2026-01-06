@@ -30,3 +30,39 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/        # Temporary autosave files (your previous error)
+*/.ipynb_checkpoints/* # Catch-all for checkpoints in subfolders
+.virtual_documents/        # Created by JupyterLab LSP
+node_modules/              # If you use Jupyter extensions
+
+# --- Python & Environment ---
+__pycache__/               # Compiled Python files
+*.py[cod]                  # Compiled bytecode
+*$py.class                 # Compiled bytecode
+.venv/                     # Virtual environment folder (highly recommended)
+venv/                      # Alternative venv name
+env/                       # Another common venv name
+.env                       # Secret environment variables (API keys, etc.)
+
+# --- Machine Learning Specifics ---
+# Data (Ignore large files you don't want on GitHub)
+data/raw/                  # Usually you keep raw data local
+data/processed/            # Keep processed data local
+*.csv                      # Exclude large datasets (unless they are tiny)
+*.parquet
+*.h5
+*.jsonl
+
+# Models (Ignore heavy binary files)
+models/*.pkl               # Pickled models
+models/*.joblib            # Joblib models
+models/*.onnx              # ONNX models
+*.pth                      # PyTorch models
+*.pb                       # TensorFlow models
+checkpoint/                # Model training checkpoints
+
+
+.DS_Store                  # macOS system files
+Thumbs.db                  # Windows system files
