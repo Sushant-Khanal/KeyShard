@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 
 const PasswordForm = ({ handleUpdatedPassword }) => {
 
-    const { localhost } = Constants.expoConfig.extra;
+    const { localhost } = Constants.expoConfig?.extra ?? {};
     const [tab, setTab] = useState(false)
     const [passwordVisibility, setPasswordVisibility] = useState(true)
     const [password, setPassword] = useState([])
@@ -54,7 +54,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                 navigate('/')
             }
 
-            const response = await fetch(`http://${localhost}:4000/api/passFetch`, {
+            const response = await fetch(`${localhost}/api/passFetch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -101,7 +101,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
             setSession({ iv: iv, tag: tag, vaultKey: fromByteArray(session?.vaultKey), userHash: session?.userHash, salt: session?.salt })
             console.log("newpasssecure: ", encryptedVault)
 
-            const response = await fetch(`http://${localhost}:4000/api/newPassword`, {
+            const response = await fetch(`${localhost}/api/newPassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -181,14 +181,15 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                 // importantForAutofill="no"
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
-                className="w-full"
+                className="w-full min-h-full  "
             >
                 <ScrollView
-                    style={{ flex: 1 }}
-                    contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+
+                    contentContainerStyle={{ padding: 16, paddingBottom: 175 }}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                    className="mt-5 rounded-lg border border-white w-full"
+                    className="mt-5 rounded-lg border w-full "
+                    style={{ flex: 1, borderColor: '#b7dcff', backgroundColor: '#111d2e' }}
                 >
                     <TouchableOpacity
                         onPress={() => {
@@ -220,8 +221,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 render={({ field: { onChange, onBlur, value }, }) => (
                                     <View>
                                         <TextInput
-                                            className="bg-white text-black w-full rounded-md px-3 py-2"
+                                            className="text-white w-full rounded-md px-3 py-2"
+                                            style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                             placeholder="e.g., Gmail, Facebook"
+                                            placeholderTextColor="#6b7280"
                                             value={value}
                                             onChangeText={onChange}
                                             onBlur={onBlur}
@@ -249,8 +252,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 render={({ field: { onChange, onBlur, value }, }) => (
                                     <View>
                                         <TextInput
-                                            className="bg-white text-black w-full rounded-md px-3 py-2"
+                                            className="text-white w-full rounded-md px-3 py-2"
+                                            style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                             placeholder="john@example.com"
+                                            placeholderTextColor="#6b7280"
                                             value={value}
                                             importantForAutofill="no"
                                             onChangeText={onChange}
@@ -283,8 +288,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                     <View className="relative">
                                         <TextInput
                                             secureTextEntry={passwordVisibility}
-                                            className="bg-white text-black w-full rounded-md px-3 py-2 pr-12"
+                                            className="text-white w-full rounded-md px-3 py-2 pr-12"
+                                            style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                             placeholder="Enter password"
+                                            placeholderTextColor="#6b7280"
                                             value={value}
                                             onChangeText={onChange}
                                             onBlur={onBlur}
@@ -328,8 +335,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <View>
                                         <TextInput
-                                            className="bg-white text-black w-full rounded-md px-3 py-2"
+                                            className="text-white w-full rounded-md px-3 py-2"
+                                            style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                             placeholder="https://example.com"
+                                            placeholderTextColor="#6b7280"
                                             value={value}
                                             onChangeText={onChange}
                                             onBlur={onBlur}
@@ -355,8 +364,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 name="category"
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <TextInput
-                                        className="bg-white text-black w-full rounded-md px-3 py-2"
+                                        className="text-white w-full rounded-md px-3 py-2"
+                                        style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                         placeholder="e.g., Email, Social Media, Banking"
+                                        placeholderTextColor="#6b7280"
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
@@ -400,8 +411,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 name="recoveryPhone"
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <TextInput
-                                        className="bg-white text-black w-full rounded-md px-3 py-2"
+                                        className="text-white w-full rounded-md px-3 py-2"
+                                        style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                         placeholder="+1234567890"
+                                        placeholderTextColor="#6b7280"
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
@@ -426,8 +439,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <View>
                                         <TextInput
-                                            className="bg-white text-black w-full rounded-md px-3 py-2"
+                                            className="text-white w-full rounded-md px-3 py-2"
+                                            style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                             placeholder="recovery@example.com"
+                                            placeholderTextColor="#6b7280"
                                             value={value}
                                             onChangeText={onChange}
                                             onBlur={onBlur}
@@ -458,8 +473,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 name="notes"
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <TextInput
-                                        className="bg-white text-black w-full rounded-md px-3 py-2"
+                                        className="text-white w-full rounded-md px-3 py-2"
+                                        style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                         placeholder="Additional information..."
+                                        placeholderTextColor="#6b7280"
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
@@ -479,8 +496,10 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                                 name="tags"
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <TextInput
-                                        className="bg-white text-black w-full rounded-md px-3 py-2"
+                                        className="text-white w-full rounded-md px-3 py-2"
+                                        style={{ backgroundColor: '#111d2e', borderColor: '#b7dcff', borderWidth: 1 }}
                                         placeholder="work, important, 2fa"
+                                        placeholderTextColor="#6b7280"
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}

@@ -10,8 +10,8 @@ const router = express.Router()
 router.post('/signup',async (req,res)=>{
     const session= await mongoose.startSession();
     try{
-        const {email, encryptedVault,iv,tag,userHash,salt}= req.body
-        console.log('backendalt:',salt)
+        const {email, encryptedVault,iv,tag,userHash,salt,publicKeyBase64}= req.body
+        console.log('publicKeyBase64backend:',publicKeyBase64)
 
         if(!email || !encryptedVault || !userHash ){
           return  res.status(400).json({
@@ -38,7 +38,8 @@ router.post('/signup',async (req,res)=>{
                  iv:iv,
                  userHash:userHash,
                  tag:tag,
-                 salt:salt
+                 salt:salt,
+                 publicKeyBase64:publicKeyBase64
             }],{session})
 
        
