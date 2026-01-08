@@ -53,7 +53,10 @@ module.exports = {
     },
     extra: {
       ARGON_SALT: process.env.ARGON_SALT,
-      localhost: process.env.IP
+      localhost: process.env.IP,
+      "eas": {
+        "projectId": "538b2367-1cd7-4f53-a002-cefbee77322d"
+      }
     }
   }
 };
