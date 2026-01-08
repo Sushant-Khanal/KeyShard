@@ -83,8 +83,9 @@ const Login = () => {
             const salt = resultInitial.message?.salt
             await new Promise((r) => requestAnimationFrame(r))
 
-            const { vaultKey, userHash } = genMasterKey(password, salt)
-            if (!vaultKey || !userHash) {
+            const { vaultKey, userHash, publicKeyBase64, privateKey } = await genMasterKey(password, salt)
+
+            if (!vaultKey || !userHash || !publicKeyBase64 || !privateKey) {
                 setError('Failed to generate vault key')
                 return
             }
@@ -117,7 +118,8 @@ const Login = () => {
             }
 
             setStatus('Success, Loading your vault...')
-            setSession({ vaultKey, iv, tag, salt, userHash })
+            console.log("loginprivatekey:", privateKey)
+            setSession({ vaultKey, iv, tag, salt, userHash, privateKey })
 
             setTimeout(() => {
                 const session = getSession()

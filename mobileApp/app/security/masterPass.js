@@ -56,7 +56,7 @@ const challenge= toByteArray("123456")
    
      
        
-    return {vaultKey:fromByteArray(hk1),userHash:bytesToHex(userKeyHash),publicKeyBase64:publicKeyBase64}
+    return {vaultKey:fromByteArray(hk1),userHash:bytesToHex(userKeyHash),publicKeyBase64:publicKeyBase64,privateKey:privateKey}
     }catch(e){
         console.log(e)
     }

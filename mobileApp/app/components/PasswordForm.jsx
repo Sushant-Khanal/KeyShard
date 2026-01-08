@@ -6,8 +6,9 @@ import { Eye, EyeOff } from "lucide-react-native"
 import { encryptPassword, decryptPassword } from "../security/aesEncryption"
 import { getSession, setSession } from "../security/secureStore"
 import { navigate } from "expo-router/build/global-state/routing"
-import { fromByteArray } from "react-native-quick-base64"
+import { fromByteArray, toByteArray } from "react-native-quick-base64"
 import Constants from 'expo-constants';
+import { ed } from "../security/signatureEd"
 
 const PasswordForm = ({ handleUpdatedPassword }) => {
 
@@ -88,25 +89,57 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
 
     }, [])
 
+    useEffect(() => {
+        console.log(error)
+    }, [error]);
+
 
     async function handleNewPassword(session) {
         try {
-
+            console.log("passwordhahahaha")
             const encrypt = await encryptPassword(JSON.stringify(password), fromByteArray(session?.vaultKey))
             if (!encrypt) {
                 return setError('Failed to encrypt your vault')
             }
 
             const { encryptedVault, iv, tag } = encrypt
-            setSession({ iv: iv, tag: tag, vaultKey: fromByteArray(session?.vaultKey), userHash: session?.userHash, salt: session?.salt })
+            setSession({ iv: iv, tag: tag, vaultKey: fromByteArray(session?.vaultKey), userHash: session?.userHash, salt: session?.salt, privateKey: session?.privateKey })
             console.log("newpasssecure: ", encryptedVault)
+
+            const { userHash } = getSession()
+            const response1 = await fetch(`${localhost}/api/challengeCreate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+
+                },
+                body: JSON.stringify({ userHash: userHash })
+            })
+            const result1 = await response1.json()
+
+            if (!response1.ok) {
+                setError(result1.error)
+            }
+
+
+            const { challengeB64, challengeIdB64 } = result1.message
+            const challenge = toByteArray(challengeB64)
+            console.log(session)
+            const privateKey = session?.privateKey
+            console.log("privatekeypassword", privateKey)
+            const signature = await ed.signAsync(challenge, privateKey);
+            const signatureB64 = fromByteArray(signature)
+            console.log("frontendchallanege:", challengeB64)
+
+
+
 
             const response = await fetch(`${localhost}/api/newPassword`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ encryptedVault: encryptedVault, iv: iv, tag: tag, userHash: session.userHash })
+                body: JSON.stringify({ encryptedVault: encryptedVault, iv: iv, tag: tag, userHash: session.userHash, signatureB64: signatureB64, challengeIdB64: challengeIdB64 })
             })
 
             const result = await response.json()
@@ -136,7 +169,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
             if (session?.vaultKey) {
                 console.log('no session')
             }
-            console.log('session')
+
             handleNewPassword(session)
 
 

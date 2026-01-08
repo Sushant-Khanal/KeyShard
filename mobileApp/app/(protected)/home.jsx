@@ -1,12 +1,18 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react'
-import { Text, Image, View, TouchableOpacity, ScrollView, TextInput } from 'react-native'
+import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ArrowDown, ArrowUp } from 'lucide-react-native'
+import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ArrowDown, ArrowUp, Trash2, Edit2 } from 'lucide-react-native'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
+import { getSession } from '../security/secureStore'
+import { encryptPassword } from '../security/aesEncryption'
+import { fromByteArray, toByteArray } from 'react-native-quick-base64'
+import Constants from 'expo-constants'
+import { ed } from '../security/signatureEd'
 import PasswordForm from '../components/PasswordForm'
 
 const Home = () => {
+    const { localhost } = Constants.expoConfig?.extra ?? {}
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
@@ -17,14 +23,178 @@ const Home = () => {
     const [password, setPassword] = useState([])
     const [visibleId, setVisibleId] = useState(null)
     const [openId, setOpenId] = useState(null)
-
-
+    const [editingId, setEditingId] = useState(null)
+    const [editValues, setEditValues] = useState({})
 
 
     function handleUpdatedPassword(data) {
         if (Array.isArray(data)) {
             setPassword(data)
         }
+    }
+
+    const handleDelete = (itemId) => {
+        Alert.alert(
+            'Delete Password',
+            'Are you sure you want to delete this password? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const session = getSession()
+                            const updatedPasswords = password.filter(p => p.id !== itemId)
+
+                            const encrypt = await encryptPassword(JSON.stringify(updatedPasswords), fromByteArray(session?.vaultKey))
+                            if (!encrypt) {
+                                Alert.alert('Error', 'Failed to encrypt your vault')
+                                return
+                            }
+
+                            const { encryptedVault, iv, tag } = encrypt
+
+                            const { userHash } = getSession()
+                            const response1 = await fetch(`${localhost}/api/challengeCreate`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ userHash: userHash })
+                            })
+                            const result1 = await response1.json()
+
+                            if (!response1.ok) {
+                                Alert.alert('Error', result1.message || 'Failed to create challenge')
+                                return
+                            }
+
+                            const { challengeB64, challengeIdB64 } = result1.message
+                            const challenge = toByteArray(challengeB64)
+                            const privateKey = session?.privateKey
+                            const signature = await ed.signAsync(challenge, privateKey);
+                            const signatureB64 = fromByteArray(signature)
+
+                            const response = await fetch(`${localhost}/api/newPassword`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    encryptedVault: encryptedVault,
+                                    iv: iv,
+                                    tag: tag,
+                                    userHash: session.userHash,
+                                    signatureB64: signatureB64,
+                                    challengeIdB64: challengeIdB64
+                                })
+                            })
+
+                            const result = await response.json()
+                            if (!response.ok) {
+                                Alert.alert('Error', result.message || 'Failed to delete password')
+                                return
+                            }
+
+                            setPassword(updatedPasswords)
+                            Alert.alert('Success', 'Password deleted successfully')
+                        } catch (error) {
+                            console.log('Delete error:', error)
+                            Alert.alert('Error', 'Failed to delete password')
+                        }
+                    }
+                }
+            ]
+        )
+    }
+
+    const handleEditStart = (item) => {
+        setEditingId(item.id)
+        setEditValues({
+            password: item.password,
+            username: item.username,
+            url: item.url,
+            category: item.category,
+            notes: item.notes,
+            tags: item.tags,
+            recoveryEmail: item.recoveryEmail,
+            recoveryPhone: item.recoveryPhone
+        })
+    }
+
+    const handleEditSave = async (itemId) => {
+        try {
+            const session = getSession()
+            const updatedPasswords = password.map(p =>
+                p.id === itemId
+                    ? { ...p, ...editValues }
+                    : p
+            )
+
+            const encrypt = await encryptPassword(JSON.stringify(updatedPasswords), fromByteArray(session?.vaultKey))
+            if (!encrypt) {
+                Alert.alert('Error', 'Failed to encrypt your vault')
+                return
+            }
+
+            const { encryptedVault, iv, tag } = encrypt
+
+            const { userHash } = getSession()
+            const response1 = await fetch(`${localhost}/api/challengeCreate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userHash: userHash })
+            })
+            const result1 = await response1.json()
+            console.log("result1", result1)
+            if (!response1.ok) {
+                Alert.alert('Error', result1.message || 'Failed to create challenge')
+                return
+            }
+
+            const { challengeB64, challengeIdB64 } = result1.message
+            const challenge = toByteArray(challengeB64)
+            const privateKey = session?.privateKey
+            const signature = await ed.signAsync(challenge, privateKey);
+            const signatureB64 = fromByteArray(signature)
+
+            const response = await fetch(`${localhost}/api/newPassword`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    encryptedVault: encryptedVault,
+                    iv: iv,
+                    tag: tag,
+                    userHash: session.userHash,
+                    signatureB64: signatureB64,
+                    challengeIdB64: challengeIdB64
+                })
+            })
+
+            const result = await response.json()
+            if (!response.ok) {
+                Alert.alert('Error', result.message || 'Failed to update password')
+                return
+            }
+
+            setPassword(updatedPasswords)
+            setEditingId(null)
+            setEditValues({})
+            Alert.alert('Success', 'Password updated successfully')
+        } catch (error) {
+            console.log('Edit save error:', error)
+            Alert.alert('Error', 'Failed to update password')
+        }
+    }
+
+    const handleEditCancel = () => {
+        setEditingId(null)
+        setEditValues({})
     }
 
     useEffect(() => {
@@ -92,6 +262,7 @@ const Home = () => {
                                 if (!item || !item.id) return null
 
                                 const isVisible = visibleId === item.id
+                                const isEditing = editingId === item.id
 
 
                                 return (
@@ -99,7 +270,7 @@ const Home = () => {
                                         key={item.id}
                                         className="bg-[#111d2e] border border-[#b7dcff] rounded-xl p-4 mb-4"
                                     >
-                                        {/* TITLE + CATEGORY */}
+                                        {/* TITLE + CATEGORY + EDIT/DELETE BUTTONS */}
                                         <View className="flex-row justify-between items-center mb-3 gap-2">
                                             <View className='flex flex-row justify-center items-center gap-2 flex-1'>
                                                 <Image
@@ -120,17 +291,44 @@ const Home = () => {
                                                     {item.category || 'Other'}
                                                 </Text>
                                             </View>
+
+                                            {!isEditing && (
+                                                <View className="flex-row gap-2 flex-shrink-0">
+                                                    <TouchableOpacity
+                                                        onPress={() => handleEditStart(item)}
+                                                        className="p-2 rounded-lg bg-blue-500/20 active:bg-blue-500/40"
+                                                    >
+                                                        <Edit2 size={16} color="#3b82f6" />
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        onPress={() => handleDelete(item.id)}
+                                                        className="p-2 rounded-lg bg-red-500/20 active:bg-red-500/40"
+                                                    >
+                                                        <Trash2 size={16} color="#ef4444" />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            )}
                                         </View>
 
                                         {/* USERNAME */}
                                         <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                             <Key size={16} color="#9ca3af" />
-                                            <View className="ml-2 flex-1">
-                                                <Text className="text-gray-400 text-xs mb-1">Username</Text>
-                                                <Text className="text-white text-sm">
-                                                    {item.username || 'N/A'}
-                                                </Text>
-                                            </View>
+                                            {isEditing ? (
+                                                <TextInput
+                                                    className="text-white text-sm ml-2 flex-1 py-1"
+                                                    value={editValues.username}
+                                                    onChangeText={(text) => setEditValues({ ...editValues, username: text })}
+                                                    placeholder="Username"
+                                                    placeholderTextColor="#6b7280"
+                                                />
+                                            ) : (
+                                                <View className="ml-2 flex-1">
+                                                    <Text className="text-gray-400 text-xs mb-1">Username</Text>
+                                                    <Text className="text-white text-sm">
+                                                        {item.username || 'N/A'}
+                                                    </Text>
+                                                </View>
+                                            )}
                                         </View>
                                         <TouchableOpacity onPress={() => setOpenId((prev) =>
                                             prev === item.id ? null : item.id
@@ -142,12 +340,23 @@ const Home = () => {
                                             <View className="mb-3">
                                                 <Text className="text-gray-400 text-xs mb-2">Password</Text>
                                                 <View className="bg-[#020617] rounded-lg px-3 py-3 flex-row items-center justify-between">
-                                                    <TextInput
-                                                        className="text-white font-bold text-base flex-1 pr-3"
-                                                        value={String(item.password || '')}
-                                                        secureTextEntry={!isVisible}
-                                                        editable={false}
-                                                    />
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-white font-bold text-base flex-1 pr-3"
+                                                            value={String(editValues.password || '')}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, password: text })}
+                                                            secureTextEntry={!isVisible}
+                                                            placeholder="Password"
+                                                            placeholderTextColor="#6b7280"
+                                                        />
+                                                    ) : (
+                                                        <TextInput
+                                                            className="text-white font-bold text-base flex-1 pr-3"
+                                                            value={String(item.password || '')}
+                                                            secureTextEntry={!isVisible}
+                                                            editable={false}
+                                                        />
+                                                    )}
                                                     <TouchableOpacity
                                                         onPress={() =>
                                                             setVisibleId((prev) =>
@@ -165,66 +374,136 @@ const Home = () => {
                                             </View>
 
                                             {/* URL */}
-                                            {item.url ? (
+                                            {item.url || isEditing ? (
                                                 <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                                     <Lock size={16} color="#9ca3af" />
-                                                    <View className="ml-2 flex-1">
-                                                        <Text className="text-gray-400 text-xs mb-1">Website</Text>
-                                                        <Text className="text-blue-400 text-sm">
-                                                            {item.url}
-                                                        </Text>
-                                                    </View>
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-blue-400 text-sm ml-2 flex-1 py-1"
+                                                            value={editValues.url}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, url: text })}
+                                                            placeholder="Website URL"
+                                                            placeholderTextColor="#6b7280"
+                                                        />
+                                                    ) : (
+                                                        <View className="ml-2 flex-1">
+                                                            <Text className="text-gray-400 text-xs mb-1">Website</Text>
+                                                            <Text className="text-blue-400 text-sm">
+                                                                {item.url}
+                                                            </Text>
+                                                        </View>
+                                                    )}
                                                 </View>
                                             ) : null}
 
                                             {/* RECOVERY EMAIL */}
-                                            {item.recoveryEmail ? (
+                                            {item.recoveryEmail || isEditing ? (
                                                 <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                                     <Mail size={16} color="#9ca3af" />
-                                                    <View className="ml-2 flex-1">
-                                                        <Text className="text-gray-400 text-xs mb-1">Recovery Email</Text>
-                                                        <Text className="text-white text-sm">
-                                                            {item.recoveryEmail}
-                                                        </Text>
-                                                    </View>
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-white text-sm ml-2 flex-1 py-1"
+                                                            value={editValues.recoveryEmail}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, recoveryEmail: text })}
+                                                            placeholder="Recovery Email"
+                                                            placeholderTextColor="#6b7280"
+                                                        />
+                                                    ) : (
+                                                        <View className="ml-2 flex-1">
+                                                            <Text className="text-gray-400 text-xs mb-1">Recovery Email</Text>
+                                                            <Text className="text-white text-sm">
+                                                                {item.recoveryEmail}
+                                                            </Text>
+                                                        </View>
+                                                    )}
                                                 </View>
                                             ) : null}
 
                                             {/* RECOVERY PHONE */}
-                                            {item.recoveryPhone ? (
+                                            {item.recoveryPhone || isEditing ? (
                                                 <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                                     <Phone size={16} color="#9ca3af" />
-                                                    <View className="ml-2 flex-1">
-                                                        <Text className="text-gray-400 text-xs mb-1">Recovery Phone</Text>
-                                                        <Text className="text-white text-sm">
-                                                            {item.recoveryPhone}
-                                                        </Text>
-                                                    </View>
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-white text-sm ml-2 flex-1 py-1"
+                                                            value={editValues.recoveryPhone}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, recoveryPhone: text })}
+                                                            placeholder="Recovery Phone"
+                                                            placeholderTextColor="#6b7280"
+                                                        />
+                                                    ) : (
+                                                        <View className="ml-2 flex-1">
+                                                            <Text className="text-gray-400 text-xs mb-1">Recovery Phone</Text>
+                                                            <Text className="text-white text-sm">
+                                                                {item.recoveryPhone}
+                                                            </Text>
+                                                        </View>
+                                                    )}
                                                 </View>
                                             ) : null}
 
                                             {/* TAGS */}
-                                            {item.tags ? (
+                                            {item.tags || isEditing ? (
                                                 <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                                     <Tag size={16} color="#9ca3af" />
-                                                    <View className="ml-2 flex-1">
-                                                        <Text className="text-gray-400 text-xs mb-1">Tags</Text>
-                                                        <Text className="text-white text-sm">
-                                                            {item.tags}
-                                                        </Text>
-                                                    </View>
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-white text-sm ml-2 flex-1 py-1"
+                                                            value={editValues.tags}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, tags: text })}
+                                                            placeholder="Tags"
+                                                            placeholderTextColor="#6b7280"
+                                                        />
+                                                    ) : (
+                                                        <View className="ml-2 flex-1">
+                                                            <Text className="text-gray-400 text-xs mb-1">Tags</Text>
+                                                            <Text className="text-white text-sm">
+                                                                {item.tags}
+                                                            </Text>
+                                                        </View>
+                                                    )}
                                                 </View>
                                             ) : null}
 
                                             {/* NOTES */}
-                                            {item.notes ? (
+                                            {item.notes || isEditing ? (
                                                 <View className="mb-3 bg-[#020617] rounded-lg px-3 py-2">
                                                     <Text className="text-gray-400 text-xs mb-1">Notes</Text>
-                                                    <Text className="text-white text-sm">
-                                                        {item.notes}
-                                                    </Text>
+                                                    {isEditing ? (
+                                                        <TextInput
+                                                            className="text-white text-sm py-1"
+                                                            value={editValues.notes}
+                                                            onChangeText={(text) => setEditValues({ ...editValues, notes: text })}
+                                                            placeholder="Notes"
+                                                            placeholderTextColor="#6b7280"
+                                                            multiline
+                                                            numberOfLines={3}
+                                                        />
+                                                    ) : (
+                                                        <Text className="text-white text-sm">
+                                                            {item.notes}
+                                                        </Text>
+                                                    )}
                                                 </View>
                                             ) : null}
+
+                                            {/* EDIT SAVE/CANCEL BUTTONS */}
+                                            {isEditing && (
+                                                <View className="flex-row gap-2 mb-3">
+                                                    <TouchableOpacity
+                                                        onPress={() => handleEditSave(item.id)}
+                                                        className="flex-1 bg-green-500 py-2 rounded-lg"
+                                                    >
+                                                        <Text className="text-white font-bold text-center">Save</Text>
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        onPress={handleEditCancel}
+                                                        className="flex-1 bg-gray-600 py-2 rounded-lg"
+                                                    >
+                                                        <Text className="text-white font-bold text-center">Cancel</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            )}
                                         </View>)}
 
                                         {/* CREATED DATE */}
