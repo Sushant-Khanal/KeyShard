@@ -229,9 +229,9 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                             setTab(false)
                             reset()
                         }}
-                        className="bg-white self-end rounded-md mb-4"
+                        className="bg-white  self-end rounded-md mb-4"
                     >
-                        <Text className="text-red-500 px-3 py-1 font-semibold">Cancel</Text>
+                        <Text className="text-blue-500  px-3 py-1 font-semibold">Cancel</Text>
                     </TouchableOpacity>
 
                     {/* ========== CREDENTIALS SECTION ========== */}
