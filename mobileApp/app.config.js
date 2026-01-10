@@ -56,7 +56,7 @@ module.exports = {
     ],
     experiments: {
       typedRoutes: true,
-      reactCompiler: true
+      reactCompiler: false
     },
     extra: {
       ARGON_SALT: process.env.ARGON_SALT,
