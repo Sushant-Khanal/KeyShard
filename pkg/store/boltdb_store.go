@@ -138,3 +138,24 @@ func (d *Database) Get(key string) (*Entry, error) {
 func (d *Database) Delete(key string) error {
 	return d.DeleteKey(key)
 }
+
+func (d *Database) GetAll() ([]*Entry, error) {
+	entries := []*Entry{}
+
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(defaultBucket)
+		if b == nil {
+			return fmt.Errorf("bucket %q not found", defaultBucket)
+		}
+
+		return b.ForEach(func(k, v []byte) error {
+			entries = append(entries, &Entry{
+				Key:   string(k),
+				Value: append([]byte(nil), v...), // safe copy
+			})
+			return nil
+		})
+	})
+
+	return entries, err
+}

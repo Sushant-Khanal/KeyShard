@@ -20,7 +20,7 @@ RUN go build -o keyshard ./cmd/keyshard-node
 FROM debian:bookworm-slim
 
 WORKDIR /app
-
+RUN apt update && apt install -y curl
 COPY --from=builder /app/keyshard /app/keyshard
 
 # Copy node configs

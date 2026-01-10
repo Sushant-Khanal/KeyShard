@@ -1,12 +1,13 @@
 package api
 
 import (
+	"Keyshard/pkg/shard"
+	"Keyshard/pkg/store"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-
-	"Keyshard/pkg/shard"
-	"Keyshard/pkg/store"
+	"time"
 )
 
 type Server struct {
@@ -23,6 +24,9 @@ func NewServer(db store.Store, ring *shard.Ring, nodeID string) *Server {
 	}
 }
 
+// Timeout for forwarding requests
+const forwardTimeout = 3 * time.Second
+
 /* ------------------ helpers ------------------ */
 
 func (s *Server) routeOrHandle(
@@ -36,34 +40,61 @@ func (s *Server) routeOrHandle(
 		return
 	}
 
+	// Lookup owner of the key
 	owner, err := s.ring.Lookup(key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// If current node owns the key, handle locally
 	if owner.Name == s.nodeID {
 		err := localHandler()
 		fmt.Fprintf(w, "Node=%s Error=%v", s.nodeID, err)
 		return
 	}
 
-	target := fmt.Sprintf("http://%s%s?%s",
-		owner.Address,
-		r.URL.Path,
-		r.URL.RawQuery,
-	)
+	// Forward with failover
+	nodes := s.ring.AllMembers() // all nodes in the ring
+	tried := map[string]bool{}
+	current := owner
 
-	resp, err := http.Get(target)
-	if err != nil {
-		http.Error(w, "Forward failed: "+err.Error(), http.StatusBadGateway)
-		return
+	client := &http.Client{
+		Timeout: forwardTimeout,
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
+	for len(tried) < len(nodes) {
+		if tried[current.Name] {
+			current = s.ring.NextNode(current)
+			continue
+		}
+
+		tried[current.Name] = true
+
+		// build request
+		target := fmt.Sprintf("http://%s%s?%s", current.Address, r.URL.Path, r.URL.RawQuery)
+		req, err := http.NewRequest(r.Method, target, r.Body)
+		if err != nil {
+			current = s.ring.NextNode(current)
+			continue
+		}
+		req.Header = r.Header
+
+		resp, err := client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			body, _ := io.ReadAll(resp.Body)
+			w.WriteHeader(resp.StatusCode)
+			w.Write(body)
+			return
+		}
+
+		// Node down → try next
+		current = s.ring.NextNode(current)
+	}
+
+	// If we reach here, truly all nodes failed
+	http.Error(w, "All nodes unreachable for key "+key, http.StatusBadGateway)
 }
 
 /* ------------------ handlers ------------------ */
@@ -71,13 +102,21 @@ func (s *Server) routeOrHandle(
 func (s *Server) GetHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 
-	s.routeOrHandle(w, r, key, func() error {
-		entry, err := s.db.Get(key)
-		if err != nil {
-			return err
-		}
-		w.Write(entry.Value)
-		return nil
+	entry, err := s.db.Get(key)
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "key not found",
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"key":   key,
+		"value": string(entry.Value),
 	})
 }
 
@@ -85,11 +124,25 @@ func (s *Server) SetHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	value := r.URL.Query().Get("value")
 
-	s.routeOrHandle(w, r, key, func() error {
-		return s.db.Put(&store.Entry{
-			Key:   key,
-			Value: []byte(value),
+	err := s.db.Put(&store.Entry{
+		Key:   key,
+		Value: []byte(value),
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "error",
+			"error":  err.Error(),
 		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "success",
+		"node":   s.nodeID,
 	})
 }
 
