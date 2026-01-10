@@ -1,0 +1,44 @@
+import mongoose, { Mongoose, Schema } from 'mongoose'
+
+const UserSchema= new mongoose.Schema({
+    email:{
+        type:String,
+        unique:true,
+        required:true,
+        lowercase:true,
+        trim: true,
+        match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    },
+     encryptedVault:{
+        type:String,
+        required:true
+    },
+      iv:{
+        type:String,
+        required:true
+    },
+     tag:{
+        type:String,
+        required:true
+    },
+    salt:{
+        type:String,
+        required:true
+    },
+      userHash:{
+        type:String,
+        unique:true,
+        required:true
+    },
+    publicKeyBase64:{
+      type:String,
+        unique:true,
+        required:true
+    },
+     createdAt: {
+    type: Date,
+    default: Date.now
+  }
+})
+
+export default mongoose.model('User',UserSchema)

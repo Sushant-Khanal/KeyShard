@@ -1,33 +1,30 @@
 # KeyShards
 
   ## User Flow
-  
+
   ### Signup Flow
-  
-  ![SignUp Flow](/mobileApp/assets/images/signupflow.png)
-  
+
+  ![SignUp Flow](assets/images/signupflow.png)
+
   ### Login Flow
+
+  ![Login Flow](assets/images/loginflow.png)
+
   
-  ![Login Flow](/mobileApp/assets/images/loginflow.png)
+
 
 # Gallery
  ## SignIn Page Mobile
-![Sign In Page](/mobileApp/assets/images/SigninPage.jpg)
+![Sign In Page](assets/images/SigninPage.jpg)
 
 ## Sign Up Page Mobile
-![Sign Up Page](/mobileApp/assets/images/SignUp.jpg)
+![Sign Up Page](assets/images/SignUp.jpg)
 
 ## Home Page Mobile
-![Home Page](/mobileApp/assets/images/Home.jpg)
+![Home Page](assets/images/Home.jpg)
 
 ## Argon2 Output
-![Argon2 Output](/mobileApp/assets/images/Argon2Output.png)
-
-## Password Detail Form (React Hook Form)
-![Pass Form](/mobileApp/assets/images/passwordform.jpg)
-
-## AES GSM (Password Vault Output)
-![Output](/mobileApp/assets/images/Aesoutput.png)
+![Argon2 Output](assets/images/Argon2Output.png)
 
 
 # KeyShards FrontEnd Workflow
@@ -43,7 +40,7 @@
 - This master key **never leaves the device** and is **never stored in the database**.
 
 ## Argon2 Output
-![Argon2 Output](/mobileApp/assets/images/Argon2Output.png)
+![Argon2 Output](assets/images/Argon2Output.png)
 
 ## Vault Encryption
 - The **entire vault** (all stored passwords) is encrypted using the **AES-GCM algorithm**.
