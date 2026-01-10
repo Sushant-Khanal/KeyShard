@@ -6,6 +6,7 @@ import userLoginRoute from './routes/userLogin.js'
 import passwordFetchRoute from './routes/password.js'
 import testRoute from './routes/test.js'
 import redis from './middleware/redis-client.js'
+import challengeCreateRoute from './middleware/challenge.js'
 dotenv.config()
 
 const app= express()
@@ -18,6 +19,7 @@ app.use('/api',userSignupRoute)
 app.use('/api',userLoginRoute)
 app.use('/api',passwordFetchRoute)
 app.use('/api',testRoute)
+app.use('/api',challengeCreateRoute)
 
 
 

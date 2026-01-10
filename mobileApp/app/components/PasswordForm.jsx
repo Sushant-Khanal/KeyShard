@@ -16,11 +16,12 @@ import { Eye, EyeOff } from "lucide-react-native";
 import { encryptPassword, decryptPassword } from "../security/aesEncryption";
 import { getSession, setSession } from "../security/secureStore";
 import { navigate } from "expo-router/build/global-state/routing";
-import { fromByteArray } from "react-native-quick-base64";
+import { fromByteArray, toByteArray } from "react-native-quick-base64";
 import Constants from "expo-constants";
+import { ed } from "../security/signatureEd";
 
 const PasswordForm = ({ handleUpdatedPassword }) => {
-  const { localhost } = Constants.expoConfig.extra;
+  const { localhost } = Constants.expoConfig?.extra ?? {};
   const [tab, setTab] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(true);
   const [password, setPassword] = useState([]);
@@ -97,8 +98,13 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
     handleVaultFetch();
   }, []);
 
+  useEffect(() => {
+    console.log(error);
+  }, [error]);
+
   async function handleNewPassword(session) {
     try {
+      console.log("passwordhahahaha");
       const encrypt = await encryptPassword(
         JSON.stringify(password),
         fromByteArray(session?.vaultKey)
@@ -114,8 +120,32 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
         vaultKey: fromByteArray(session?.vaultKey),
         userHash: session?.userHash,
         salt: session?.salt,
+        privateKey: session?.privateKey,
       });
       console.log("newpasssecure: ", encryptedVault);
+
+      const { userHash } = getSession();
+      const response1 = await fetch(`${localhost}/api/challengeCreate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userHash: userHash }),
+      });
+      const result1 = await response1.json();
+
+      if (!response1.ok) {
+        setError(result1.error);
+      }
+
+      const { challengeB64, challengeIdB64 } = result1.message;
+      const challenge = toByteArray(challengeB64);
+      console.log(session);
+      const privateKey = session?.privateKey;
+      console.log("privatekeypassword", privateKey);
+      const signature = await ed.signAsync(challenge, privateKey);
+      const signatureB64 = fromByteArray(signature);
+      console.log("frontendchallanege:", challengeB64);
 
       const response = await fetch(`${localhost}/api/newPassword`, {
         method: "POST",
@@ -127,6 +157,8 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
           iv: iv,
           tag: tag,
           userHash: session.userHash,
+          signatureB64: signatureB64,
+          challengeIdB64: challengeIdB64,
         }),
       });
 
@@ -151,7 +183,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
       if (session?.vaultKey) {
         console.log("no session");
       }
-      console.log("session");
+
       handleNewPassword(session);
     }
 
@@ -186,23 +218,23 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
       // importantForAutofill="no"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      className="w-full"
+      className="w-full min-h-full  "
     >
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 175 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        className="mt-5 rounded-lg border border-white w-full"
+        className="mt-5 rounded-lg border w-full "
+        style={{ flex: 1, borderColor: "#b7dcff", backgroundColor: "#111d2e" }}
       >
         <TouchableOpacity
           onPress={() => {
             setTab(false);
             reset();
           }}
-          className="bg-white self-end rounded-md mb-4"
+          className="bg-white  self-end rounded-md mb-4"
         >
-          <Text className="text-red-500 px-3 py-1 font-semibold">Cancel</Text>
+          <Text className="text-blue-500  px-3 py-1 font-semibold">Cancel</Text>
         </TouchableOpacity>
 
         {/* ========== CREDENTIALS SECTION ========== */}
@@ -227,8 +259,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <TextInput
-                    className="bg-white text-black w-full rounded-md px-3 py-2"
+                    className="text-white w-full rounded-md px-3 py-2"
+                    style={{
+                      backgroundColor: "#111d2e",
+                      borderColor: "#b7dcff",
+                      borderWidth: 1,
+                    }}
                     placeholder="e.g., Gmail, Facebook"
+                    placeholderTextColor="#6b7280"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -257,8 +295,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <TextInput
-                    className="bg-white text-black w-full rounded-md px-3 py-2"
+                    className="text-white w-full rounded-md px-3 py-2"
+                    style={{
+                      backgroundColor: "#111d2e",
+                      borderColor: "#b7dcff",
+                      borderWidth: 1,
+                    }}
                     placeholder="john@example.com"
+                    placeholderTextColor="#6b7280"
                     value={value}
                     importantForAutofill="no"
                     onChangeText={onChange}
@@ -294,8 +338,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                 <View className="relative">
                   <TextInput
                     secureTextEntry={passwordVisibility}
-                    className="bg-white text-black w-full rounded-md px-3 py-2 pr-12"
+                    className="text-white w-full rounded-md px-3 py-2 pr-12"
+                    style={{
+                      backgroundColor: "#111d2e",
+                      borderColor: "#b7dcff",
+                      borderWidth: 1,
+                    }}
                     placeholder="Enter password"
+                    placeholderTextColor="#6b7280"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -342,8 +392,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <TextInput
-                    className="bg-white text-black w-full rounded-md px-3 py-2"
+                    className="text-white w-full rounded-md px-3 py-2"
+                    style={{
+                      backgroundColor: "#111d2e",
+                      borderColor: "#b7dcff",
+                      borderWidth: 1,
+                    }}
                     placeholder="https://example.com"
+                    placeholderTextColor="#6b7280"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -371,8 +427,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               name="category"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className="bg-white text-black w-full rounded-md px-3 py-2"
+                  className="text-white w-full rounded-md px-3 py-2"
+                  style={{
+                    backgroundColor: "#111d2e",
+                    borderColor: "#b7dcff",
+                    borderWidth: 1,
+                  }}
                   placeholder="e.g., Email, Social Media, Banking"
+                  placeholderTextColor="#6b7280"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -420,8 +482,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               name="recoveryPhone"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className="bg-white text-black w-full rounded-md px-3 py-2"
+                  className="text-white w-full rounded-md px-3 py-2"
+                  style={{
+                    backgroundColor: "#111d2e",
+                    borderColor: "#b7dcff",
+                    borderWidth: 1,
+                  }}
                   placeholder="+1234567890"
+                  placeholderTextColor="#6b7280"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -448,8 +516,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View>
                   <TextInput
-                    className="bg-white text-black w-full rounded-md px-3 py-2"
+                    className="text-white w-full rounded-md px-3 py-2"
+                    style={{
+                      backgroundColor: "#111d2e",
+                      borderColor: "#b7dcff",
+                      borderWidth: 1,
+                    }}
                     placeholder="recovery@example.com"
+                    placeholderTextColor="#6b7280"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -480,8 +554,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               name="notes"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className="bg-white text-black w-full rounded-md px-3 py-2"
+                  className="text-white w-full rounded-md px-3 py-2"
+                  style={{
+                    backgroundColor: "#111d2e",
+                    borderColor: "#b7dcff",
+                    borderWidth: 1,
+                  }}
                   placeholder="Additional information..."
+                  placeholderTextColor="#6b7280"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -503,8 +583,14 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               name="tags"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  className="bg-white text-black w-full rounded-md px-3 py-2"
+                  className="text-white w-full rounded-md px-3 py-2"
+                  style={{
+                    backgroundColor: "#111d2e",
+                    borderColor: "#b7dcff",
+                    borderWidth: 1,
+                  }}
                   placeholder="work, important, 2fa"
+                  placeholderTextColor="#6b7280"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}

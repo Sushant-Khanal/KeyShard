@@ -13,6 +13,7 @@
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
+    "@noble/ed25519": "^3.0.0",
     "@noble/hashes": "^2.0.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
@@ -37,6 +38,7 @@
     "expo-web-browser": "~15.0.10",
     "lucide-react-native": "^0.554.0",
     "nativewind": "^4.2.1",
+    "password-validator": "^5.3.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.68.0",
@@ -59,6 +61,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.2"
