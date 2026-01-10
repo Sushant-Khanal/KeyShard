@@ -1,0 +1,70 @@
+services:
+  node1:
+    build:
+      context: .
+      dockerfile: deploy/node.Dockerfile
+    container_name: keyshard_node1
+    ports:
+      - "8001:8006"
+    environment:
+      NODE_ID: "node1"
+      NODE_ADDR: "0.0.0.0:8006"
+    volumes:
+      - ./data/node1:/app/data
+    command: ["-config=node1.yaml"]
+
+  node2:
+    build:
+      context: .
+      dockerfile: deploy/node.Dockerfile
+    container_name: keyshard_node2
+    ports:
+      - "8002:8007"
+    environment:
+      NODE_ID: "node2"
+      NODE_ADDR: "0.0.0.0:8007"
+    volumes:
+      - ./data/node2:/app/data
+    command: ["-config=node2.yaml"]
+
+  node3:
+    build:
+      context: .
+      dockerfile: deploy/node.Dockerfile
+    container_name: keyshard_node3
+    ports:
+      - "8003:8008"
+    environment:
+      NODE_ID: "node3"
+      NODE_ADDR: "0.0.0.0:8008"
+    volumes:
+      - ./data/node3:/app/data
+    command: ["-config=node3.yaml"]
+
+  node4:
+    build:
+      context: .
+      dockerfile: deploy/node.Dockerfile
+    container_name: keyshard_node4
+    ports:
+      - "8004:8009"
+    environment:
+      NODE_ID: "node4"
+      NODE_ADDR: "0.0.0.0:8009"
+    volumes:
+      - ./data/node4:/app/data
+    command: ["-config=node4.yaml"]
+
+  node5:
+    build:
+      context: .
+      dockerfile: deploy/node.Dockerfile
+    container_name: keyshard_node5
+    ports:
+      - "8005:8010"
+    environment:
+      NODE_ID: "node5"
+      NODE_ADDR: "0.0.0.0:8010"
+    volumes:
+      - ./data/node5:/app/data
+    command: ["-config=node5.yaml"]
