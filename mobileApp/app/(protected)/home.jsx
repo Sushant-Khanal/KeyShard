@@ -1,8 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react'
-import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native'
+import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ArrowDown, ArrowUp, Trash2, Edit2 } from 'lucide-react-native'
+import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe } from 'lucide-react-native'
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { getSession } from '../security/secureStore'
 import { encryptPassword } from '../security/aesEncryption'
@@ -10,6 +10,7 @@ import { fromByteArray, toByteArray } from 'react-native-quick-base64'
 import Constants from 'expo-constants'
 import { ed } from '../security/signatureEd'
 import PasswordForm from '../components/PasswordForm'
+import Animated, { FadeInDown, FadeIn, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 const Home = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
@@ -210,36 +211,32 @@ const Home = () => {
 
     return (
         <LinearGradient
-            colors={['#131920', '#050f1a']}
-            className="flex-1 relative items-center"
+            colors={['#0a0a0a', '#1a1a1a', '#0f0f0f']}
+            style={styles.container}
         >
-            <SafeAreaView className="flex-1 w-full" edges={['top', 'bottom']}>
-                <View className="flex-1 w-[88%] mx-auto">
-
+            <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+                <Animated.View
+                    entering={FadeIn.duration(800)}
+                    style={styles.mainContent}
+                >
                     {/* HEADER */}
-                    <View className="mb-6">
-                        <Text
-                            style={{ fontFamily: 'Montserrat_700Bold' }}
-                            className="text-white text-4xl"
-                        >
+                    <View style={styles.header}>
+                        <Text style={[styles.headerTitle, { fontFamily: 'Montserrat_700Bold' }]}>
                             Password Vault
                         </Text>
-                        <Text
-                            style={{ fontFamily: 'Montserrat_400Regular' }}
-                            className="text-gray-300 text-base mt-1"
-                        >
+                        <Text style={[styles.headerSubtitle, { fontFamily: 'Montserrat_400Regular' }]}>
                             Keep your secrets safe & encrypted
                         </Text>
                     </View>
 
                     {/* SEARCH */}
-                    <View className="mb-6">
-                        <View className="flex-row items-center bg-[#0e1621] border border-[#1f2937] rounded-lg px-3 py-2">
-                            <Search size={16} color="#9ca3af" />
+                    <View style={styles.searchContainer}>
+                        <View style={styles.searchBox}>
+                            <Search size={18} color="#666" />
                             <TextInput
                                 placeholder="Search passwords..."
-                                placeholderTextColor="#6b7280"
-                                className="ml-2 text-white flex-1"
+                                placeholderTextColor="#555"
+                                style={styles.searchInput}
                                 value={search}
                                 onChangeText={setSearch}
                             />
@@ -247,270 +244,284 @@ const Home = () => {
                     </View>
 
                     {/* ADD PASSWORD FORM */}
-
                     <PasswordForm handleUpdatedPassword={handleUpdatedPassword} />
-
 
                     {/* PASSWORD LIST */}
                     <ScrollView
-                        className="flex-1 mt-6"
+                        style={styles.scrollView}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 120 }}
                     >
                         {passwordList.length > 0 ? (
-                            passwordList.map((item) => {
+                            passwordList.map((item, index) => {
                                 if (!item || !item.id) return null
 
                                 const isVisible = visibleId === item.id
                                 const isEditing = editingId === item.id
-
+                                const isOpen = openId === item.id
 
                                 return (
-                                    <View
+                                    <Animated.View
                                         key={item.id}
-                                        className="bg-[#111d2e] border border-[#b7dcff] rounded-xl p-4 mb-4"
+                                        entering={FadeInDown.duration(400).delay(index * 100)}
+                                        style={styles.card}
                                     >
-                                        {/* TITLE + CATEGORY + EDIT/DELETE BUTTONS */}
-                                        <View className="flex-row justify-between items-center mb-3 gap-2">
-                                            <View className='flex flex-row justify-center items-center gap-2 flex-1'>
-                                                <Image
-                                                    style={{ width: 16, height: 16 }}
-                                                    source={{ uri: `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${item.url}&size=64` }}
-
-                                                />
-                                                <Text
-                                                    style={{ fontFamily: 'Montserrat_700Bold' }}
-                                                    className="text-white text-xl flex-1"
-                                                    numberOfLines={1}
-                                                >
-                                                    {item.title || 'Untitled'}
-                                                </Text>
+                                        {/* CARD HEADER */}
+                                        <View style={styles.cardHeader}>
+                                            <View style={styles.titleContainer}>
+                                                <View style={styles.iconWrapper}>
+                                                    <Image
+                                                        style={styles.favicon}
+                                                        source={{ uri: `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${item.url}&size=64` }}
+                                                    />
+                                                </View>
+                                                <View style={styles.titleTextContainer}>
+                                                    <Text style={[styles.cardTitle, { fontFamily: 'Montserrat_700Bold' }]} numberOfLines={1}>
+                                                        {item.title || 'Untitled'}
+                                                    </Text>
+                                                    <View style={styles.categoryBadge}>
+                                                        <Text style={styles.categoryText}>
+                                                            {item.category || 'Other'}
+                                                        </Text>
+                                                    </View>
+                                                </View>
                                             </View>
-                                            <View className="bg-blue-500/20 px-3 py-1 rounded-full flex-shrink-0">
-                                                <Text className="text-blue-400 text-xs font-semibold">
-                                                    {item.category || 'Other'}
-                                                </Text>
-                                            </View>
-
+                                            
                                             {!isEditing && (
-                                                <View className="flex-row gap-2 flex-shrink-0">
+                                                <View style={styles.actionButtons}>
                                                     <TouchableOpacity
                                                         onPress={() => handleEditStart(item)}
-                                                        className="p-2 rounded-lg bg-blue-500/20 active:bg-blue-500/40"
+                                                        style={styles.editButton}
                                                     >
-                                                        <Edit2 size={16} color="#3b82f6" />
+                                                        <Edit2 size={16} color="#fff" />
                                                     </TouchableOpacity>
                                                     <TouchableOpacity
                                                         onPress={() => handleDelete(item.id)}
-                                                        className="p-2 rounded-lg bg-red-500/20 active:bg-red-500/40"
+                                                        style={styles.deleteButton}
                                                     >
-                                                        <Trash2 size={16} color="#ef4444" />
+                                                        <Trash2 size={16} color="#ff6b6b" />
                                                     </TouchableOpacity>
                                                 </View>
                                             )}
                                         </View>
 
+                                        <View style={styles.divider} />
+
                                         {/* USERNAME */}
-                                        <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                            <Key size={16} color="#9ca3af" />
+                                        <View style={styles.fieldRow}>
+                                            <View style={styles.fieldIcon}>
+                                                <Key size={16} color="#888" />
+                                            </View>
                                             {isEditing ? (
                                                 <TextInput
-                                                    className="text-white text-sm ml-2 flex-1 py-1"
+                                                    style={styles.editInput}
                                                     value={editValues.username}
                                                     onChangeText={(text) => setEditValues({ ...editValues, username: text })}
                                                     placeholder="Username"
-                                                    placeholderTextColor="#6b7280"
+                                                    placeholderTextColor="#555"
                                                 />
                                             ) : (
-                                                <View className="ml-2 flex-1">
-                                                    <Text className="text-gray-400 text-xs mb-1">Username</Text>
-                                                    <Text className="text-white text-sm">
-                                                        {item.username || 'N/A'}
-                                                    </Text>
+                                                <View style={styles.fieldContent}>
+                                                    <Text style={styles.fieldLabel}>Username</Text>
+                                                    <Text style={styles.fieldValue}>{item.username || 'N/A'}</Text>
                                                 </View>
                                             )}
                                         </View>
-                                        <TouchableOpacity onPress={() => setOpenId((prev) =>
-                                            prev === item.id ? null : item.id
-                                        )}
-                                            className='flex flex-row justify-center items-center opacity-50'>{!(openId === item.id) ? <><ArrowDown strokeWidth={1.2} color='white' className=' mr-5' /><Text className='text-white text-sm  ml-2'>Expand</Text></> : <><ArrowUp strokeWidth={1.2} color='white' className=' mr-5' /><Text className='text-white text-sm  ml-2'>Collapse</Text></>}</TouchableOpacity>
 
-                                        {openId === item.id && (<View>
-                                            {/* PASSWORD */}
-                                            <View className="mb-3">
-                                                <Text className="text-gray-400 text-xs mb-2">Password</Text>
-                                                <View className="bg-[#020617] rounded-lg px-3 py-3 flex-row items-center justify-between">
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-white font-bold text-base flex-1 pr-3"
-                                                            value={String(editValues.password || '')}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, password: text })}
-                                                            secureTextEntry={!isVisible}
-                                                            placeholder="Password"
-                                                            placeholderTextColor="#6b7280"
-                                                        />
-                                                    ) : (
-                                                        <TextInput
-                                                            className="text-white font-bold text-base flex-1 pr-3"
-                                                            value={String(item.password || '')}
-                                                            secureTextEntry={!isVisible}
-                                                            editable={false}
-                                                        />
-                                                    )}
-                                                    <TouchableOpacity
-                                                        onPress={() =>
-                                                            setVisibleId((prev) =>
-                                                                prev === item.id ? null : item.id
-                                                            )
-                                                        }
-                                                    >
-                                                        {isVisible ? (
-                                                            <EyeOff color="#9ca3af" size={20} />
-                                                        ) : (
-                                                            <Eye color="#9ca3af" size={20} />
-                                                        )}
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-
-                                            {/* URL */}
-                                            {item.url || isEditing ? (
-                                                <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                                    <Lock size={16} color="#9ca3af" />
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-blue-400 text-sm ml-2 flex-1 py-1"
-                                                            value={editValues.url}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, url: text })}
-                                                            placeholder="Website URL"
-                                                            placeholderTextColor="#6b7280"
-                                                        />
-                                                    ) : (
-                                                        <View className="ml-2 flex-1">
-                                                            <Text className="text-gray-400 text-xs mb-1">Website</Text>
-                                                            <Text className="text-blue-400 text-sm">
-                                                                {item.url}
-                                                            </Text>
-                                                        </View>
-                                                    )}
-                                                </View>
-                                            ) : null}
-
-                                            {/* RECOVERY EMAIL */}
-                                            {item.recoveryEmail || isEditing ? (
-                                                <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                                    <Mail size={16} color="#9ca3af" />
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-white text-sm ml-2 flex-1 py-1"
-                                                            value={editValues.recoveryEmail}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, recoveryEmail: text })}
-                                                            placeholder="Recovery Email"
-                                                            placeholderTextColor="#6b7280"
-                                                        />
-                                                    ) : (
-                                                        <View className="ml-2 flex-1">
-                                                            <Text className="text-gray-400 text-xs mb-1">Recovery Email</Text>
-                                                            <Text className="text-white text-sm">
-                                                                {item.recoveryEmail}
-                                                            </Text>
-                                                        </View>
-                                                    )}
-                                                </View>
-                                            ) : null}
-
-                                            {/* RECOVERY PHONE */}
-                                            {item.recoveryPhone || isEditing ? (
-                                                <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                                    <Phone size={16} color="#9ca3af" />
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-white text-sm ml-2 flex-1 py-1"
-                                                            value={editValues.recoveryPhone}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, recoveryPhone: text })}
-                                                            placeholder="Recovery Phone"
-                                                            placeholderTextColor="#6b7280"
-                                                        />
-                                                    ) : (
-                                                        <View className="ml-2 flex-1">
-                                                            <Text className="text-gray-400 text-xs mb-1">Recovery Phone</Text>
-                                                            <Text className="text-white text-sm">
-                                                                {item.recoveryPhone}
-                                                            </Text>
-                                                        </View>
-                                                    )}
-                                                </View>
-                                            ) : null}
-
-                                            {/* TAGS */}
-                                            {item.tags || isEditing ? (
-                                                <View className="flex-row items-center mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                                    <Tag size={16} color="#9ca3af" />
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-white text-sm ml-2 flex-1 py-1"
-                                                            value={editValues.tags}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, tags: text })}
-                                                            placeholder="Tags"
-                                                            placeholderTextColor="#6b7280"
-                                                        />
-                                                    ) : (
-                                                        <View className="ml-2 flex-1">
-                                                            <Text className="text-gray-400 text-xs mb-1">Tags</Text>
-                                                            <Text className="text-white text-sm">
-                                                                {item.tags}
-                                                            </Text>
-                                                        </View>
-                                                    )}
-                                                </View>
-                                            ) : null}
-
-                                            {/* NOTES */}
-                                            {item.notes || isEditing ? (
-                                                <View className="mb-3 bg-[#020617] rounded-lg px-3 py-2">
-                                                    <Text className="text-gray-400 text-xs mb-1">Notes</Text>
-                                                    {isEditing ? (
-                                                        <TextInput
-                                                            className="text-white text-sm py-1"
-                                                            value={editValues.notes}
-                                                            onChangeText={(text) => setEditValues({ ...editValues, notes: text })}
-                                                            placeholder="Notes"
-                                                            placeholderTextColor="#6b7280"
-                                                            multiline
-                                                            numberOfLines={3}
-                                                        />
-                                                    ) : (
-                                                        <Text className="text-white text-sm">
-                                                            {item.notes}
-                                                        </Text>
-                                                    )}
-                                                </View>
-                                            ) : null}
-
-                                            {/* EDIT SAVE/CANCEL BUTTONS */}
-                                            {isEditing && (
-                                                <View className="flex-row gap-2 mb-3">
-                                                    <TouchableOpacity
-                                                        onPress={() => handleEditSave(item.id)}
-                                                        className="flex-1 bg-green-500 py-2 rounded-lg"
-                                                    >
-                                                        <Text className="text-white font-bold text-center">Save</Text>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity
-                                                        onPress={handleEditCancel}
-                                                        className="flex-1 bg-gray-600 py-2 rounded-lg"
-                                                    >
-                                                        <Text className="text-white font-bold text-center">Cancel</Text>
-                                                    </TouchableOpacity>
-                                                </View>
+                                        {/* EXPAND/COLLAPSE */}
+                                        <TouchableOpacity
+                                            onPress={() => setOpenId((prev) => prev === item.id ? null : item.id)}
+                                            style={styles.expandButton}
+                                        >
+                                            {!isOpen ? (
+                                                <>
+                                                    <ChevronDown size={18} color="#888" />
+                                                    <Text style={styles.expandText}>Show details</Text>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ChevronUp size={18} color="#888" />
+                                                    <Text style={styles.expandText}>Hide details</Text>
+                                                </>
                                             )}
-                                        </View>)}
+                                        </TouchableOpacity>
+
+                                        {isOpen && (
+                                            <Animated.View
+                                                entering={FadeInDown.duration(300)}
+                                                exiting={FadeOutUp.duration(200)}
+                                            >
+                                                {/* PASSWORD */}
+                                                <View style={styles.fieldGroup}>
+                                                    <Text style={styles.fieldLabel}>Password</Text>
+                                                    <View style={styles.passwordField}>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={[styles.editInput, { flex: 1 }]}
+                                                                value={String(editValues.password || '')}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, password: text })}
+                                                                secureTextEntry={!isVisible}
+                                                                placeholder="Password"
+                                                                placeholderTextColor="#555"
+                                                            />
+                                                        ) : (
+                                                            <TextInput
+                                                                style={styles.passwordText}
+                                                                value={String(item.password || '')}
+                                                                secureTextEntry={!isVisible}
+                                                                editable={false}
+                                                            />
+                                                        )}
+                                                        <TouchableOpacity
+                                                            onPress={() => setVisibleId((prev) => prev === item.id ? null : item.id)}
+                                                            style={styles.eyeButton}
+                                                        >
+                                                            {isVisible ? (
+                                                                <EyeOff color="#888" size={20} />
+                                                            ) : (
+                                                                <Eye color="#888" size={20} />
+                                                            )}
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+
+                                                {/* URL */}
+                                                {(item.url || isEditing) && (
+                                                    <View style={styles.fieldRow}>
+                                                        <View style={styles.fieldIcon}>
+                                                            <Globe size={16} color="#888" />
+                                                        </View>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={styles.editInput}
+                                                                value={editValues.url}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, url: text })}
+                                                                placeholder="Website URL"
+                                                                placeholderTextColor="#555"
+                                                            />
+                                                        ) : (
+                                                            <View style={styles.fieldContent}>
+                                                                <Text style={styles.fieldLabel}>Website</Text>
+                                                                <Text style={styles.linkText}>{item.url}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                )}
+
+                                                {/* RECOVERY EMAIL */}
+                                                {(item.recoveryEmail || isEditing) && (
+                                                    <View style={styles.fieldRow}>
+                                                        <View style={styles.fieldIcon}>
+                                                            <Mail size={16} color="#888" />
+                                                        </View>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={styles.editInput}
+                                                                value={editValues.recoveryEmail}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, recoveryEmail: text })}
+                                                                placeholder="Recovery Email"
+                                                                placeholderTextColor="#555"
+                                                            />
+                                                        ) : (
+                                                            <View style={styles.fieldContent}>
+                                                                <Text style={styles.fieldLabel}>Recovery Email</Text>
+                                                                <Text style={styles.fieldValue}>{item.recoveryEmail}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                )}
+
+                                                {/* RECOVERY PHONE */}
+                                                {(item.recoveryPhone || isEditing) && (
+                                                    <View style={styles.fieldRow}>
+                                                        <View style={styles.fieldIcon}>
+                                                            <Phone size={16} color="#888" />
+                                                        </View>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={styles.editInput}
+                                                                value={editValues.recoveryPhone}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, recoveryPhone: text })}
+                                                                placeholder="Recovery Phone"
+                                                                placeholderTextColor="#555"
+                                                            />
+                                                        ) : (
+                                                            <View style={styles.fieldContent}>
+                                                                <Text style={styles.fieldLabel}>Recovery Phone</Text>
+                                                                <Text style={styles.fieldValue}>{item.recoveryPhone}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                )}
+
+                                                {/* TAGS */}
+                                                {(item.tags || isEditing) && (
+                                                    <View style={styles.fieldRow}>
+                                                        <View style={styles.fieldIcon}>
+                                                            <Tag size={16} color="#888" />
+                                                        </View>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={styles.editInput}
+                                                                value={editValues.tags}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, tags: text })}
+                                                                placeholder="Tags"
+                                                                placeholderTextColor="#555"
+                                                            />
+                                                        ) : (
+                                                            <View style={styles.fieldContent}>
+                                                                <Text style={styles.fieldLabel}>Tags</Text>
+                                                                <Text style={styles.fieldValue}>{item.tags}</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                )}
+
+                                                {/* NOTES */}
+                                                {(item.notes || isEditing) && (
+                                                    <View style={styles.notesField}>
+                                                        <Text style={styles.fieldLabel}>Notes</Text>
+                                                        {isEditing ? (
+                                                            <TextInput
+                                                                style={[styles.editInput, { minHeight: 60 }]}
+                                                                value={editValues.notes}
+                                                                onChangeText={(text) => setEditValues({ ...editValues, notes: text })}
+                                                                placeholder="Notes"
+                                                                placeholderTextColor="#555"
+                                                                multiline
+                                                                numberOfLines={3}
+                                                            />
+                                                        ) : (
+                                                            <Text style={styles.fieldValue}>{item.notes}</Text>
+                                                        )}
+                                                    </View>
+                                                )}
+
+                                                {/* EDIT SAVE/CANCEL BUTTONS */}
+                                                {isEditing && (
+                                                    <View style={styles.editButtonsRow}>
+                                                        <TouchableOpacity
+                                                            onPress={() => handleEditSave(item.id)}
+                                                            style={styles.saveButton}
+                                                        >
+                                                            <Text style={styles.saveButtonText}>Save</Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            onPress={handleEditCancel}
+                                                            style={styles.cancelButton}
+                                                        >
+                                                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                )}
+                                            </Animated.View>
+                                        )}
 
                                         {/* CREATED DATE */}
-                                        <View className="flex-row items-center mt-2 pt-3 border-t border-[#1f2937]">
-                                            <Calendar size={14} color="#6b7280" />
-                                            <Text className="text-gray-500 text-xs ml-2">
-                                                Created: {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                        <View style={styles.footer}>
+                                            <Calendar size={14} color="#555" />
+                                            <Text style={styles.footerText}>
+                                                {new Date(item.createdAt).toLocaleDateString('en-US', {
                                                     year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
@@ -519,37 +530,335 @@ const Home = () => {
                                                 })}
                                             </Text>
                                         </View>
-                                    </View>
+                                    </Animated.View>
                                 )
                             })
                         ) : (
-                            <View className="flex-1 items-center justify-center mt-20">
-                                <ShieldCheck size={64} color="#374151" />
-                                <Text className="text-gray-400 text-center mt-4 text-base">
-                                    No passwords saved yet
-                                </Text>
-                                <Text className="text-gray-500 text-center mt-2 text-sm">
-                                    Add your first password to get started
-                                </Text>
+                            <View style={styles.emptyState}>
+                                <View style={styles.emptyIconWrapper}>
+                                    <ShieldCheck size={48} color="#333" />
+                                </View>
+                                <Text style={styles.emptyTitle}>No passwords saved yet</Text>
+                                <Text style={styles.emptySubtitle}>Add your first password to get started</Text>
                             </View>
                         )}
                     </ScrollView>
 
                     {/* FOOTER */}
-                    <View className="absolute bottom-[15px] w-full flex-row items-center justify-center">
-                        <ShieldCheck size={18} color="white" />
-                        <Text
-                            style={{ fontFamily: 'Montserrat_400Regular' }}
-                            className="text-white text-xs ml-2 opacity-70"
-                        >
+                    <View style={styles.bottomFooter}>
+                        <ShieldCheck size={16} color="#555" />
+                        <Text style={[styles.bottomFooterText, { fontFamily: 'Montserrat_400Regular' }]}>
                             AES-256 encrypted • Stored locally
                         </Text>
                     </View>
-
-                </View>
+                </Animated.View>
             </SafeAreaView>
         </LinearGradient>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        width: '100%',
+    },
+    mainContent: {
+        flex: 1,
+        width: '90%',
+        marginHorizontal: '5%',
+    },
+    header: {
+        marginBottom: 24,
+        marginTop: 10,
+    },
+    headerTitle: {
+        fontSize: 32,
+        color: '#ffffff',
+        letterSpacing: -1,
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        color: '#888',
+        marginTop: 6,
+    },
+    searchContainer: {
+        marginBottom: 20,
+    },
+    searchBox: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#2a2a2a',
+    },
+    searchInput: {
+        marginLeft: 10,
+        color: '#fff',
+        flex: 1,
+        fontSize: 16,
+    },
+    scrollView: {
+        flex: 1,
+        marginTop: 20,
+    },
+    card: {
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
+        padding: 18,
+        marginBottom: 14,
+        borderWidth: 1,
+        borderColor: '#2a2a2a',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    iconWrapper: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: '#0f0f0f',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    favicon: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+    },
+    titleTextContainer: {
+        flex: 1,
+    },
+    cardTitle: {
+        fontSize: 18,
+        color: '#fff',
+        marginBottom: 4,
+    },
+    categoryBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#2a2a2a',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    categoryText: {
+        color: '#888',
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    editButton: {
+        padding: 10,
+        borderRadius: 10,
+        backgroundColor: '#2a2a2a',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    deleteButton: {
+        padding: 10,
+        borderRadius: 10,
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 107, 107, 0.2)',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#2a2a2a',
+        marginVertical: 14,
+    },
+    fieldRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0f0f0f',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#252525',
+    },
+    fieldIcon: {
+        marginRight: 12,
+    },
+    fieldContent: {
+        flex: 1,
+    },
+    fieldLabel: {
+        color: '#666',
+        fontSize: 11,
+        marginBottom: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    fieldValue: {
+        color: '#fff',
+        fontSize: 14,
+    },
+    linkText: {
+        color: '#8ab4f8',
+        fontSize: 14,
+    },
+    editInput: {
+        flex: 1,
+        color: '#fff',
+        fontSize: 14,
+        backgroundColor: '#0f0f0f',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    expandButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        marginTop: 4,
+    },
+    expandText: {
+        color: '#666',
+        fontSize: 13,
+        marginLeft: 6,
+    },
+    fieldGroup: {
+        marginBottom: 10,
+    },
+    passwordField: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0f0f0f',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#252525',
+    },
+    passwordText: {
+        flex: 1,
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    eyeButton: {
+        padding: 4,
+    },
+    notesField: {
+        backgroundColor: '#0f0f0f',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#252525',
+    },
+    editButtonsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 6,
+    },
+    saveButton: {
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    saveButtonText: {
+        color: '#000',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#2a2a2a',
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    cancelButtonText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    footer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: '#2a2a2a',
+    },
+    footerText: {
+        color: '#555',
+        fontSize: 12,
+        marginLeft: 8,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 80,
+    },
+    emptyIconWrapper: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#1a1a1a',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#2a2a2a',
+    },
+    emptyTitle: {
+        color: '#888',
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    emptySubtitle: {
+        color: '#555',
+        fontSize: 14,
+    },
+    bottomFooter: {
+        position: 'absolute',
+        bottom: 15,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bottomFooterText: {
+        color: '#555',
+        fontSize: 12,
+        marginLeft: 8,
+    },
+})
 
 export default Home
