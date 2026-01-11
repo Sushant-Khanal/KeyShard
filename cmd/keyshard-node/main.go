@@ -62,6 +62,8 @@ func main() {
 	http.HandleFunc("/set", server.SetHandler)
 	http.HandleFunc("/delete", server.DeleteHandler)
 	http.HandleFunc("/update", server.UpdateHandler)
+	http.HandleFunc("/user", server.CreateUserHandler)
+	http.HandleFunc("/user/get", server.GetUserHandler)
 
 	log.Printf("Node %s listening on %s", cfg.NodeID, cfg.HTTPAddr)
 	log.Fatal(http.ListenAndServe(cfg.HTTPAddr, nil))
