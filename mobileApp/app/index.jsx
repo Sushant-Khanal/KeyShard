@@ -6,7 +6,7 @@ import {
     Image,
     ScrollView,
 } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
@@ -25,6 +25,12 @@ import genMasterKey from './security/masterPass'
 import { decryptPassword } from './security/aesEncryption'
 import { getSession, setSession } from './security/secureStore'
 import Constants from 'expo-constants'
+import Splash from './screens/Splash'
+import LottieView from 'lottie-react-native'
+import Animated, { FadeIn } from 'react-native-reanimated'
+
+// Global flag to track if splash was shown
+let splashShown = false;
 
 const Login = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
@@ -34,6 +40,8 @@ const Login = () => {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState('')
+    const [isLoading, setIsLoading] = useState(!splashShown)
+
 
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
@@ -44,7 +52,11 @@ const Login = () => {
         navigate('./components/signup')
     }
 
-    useEffect(() => { }, [status])
+    useEffect(() => {
+        if (!isLoading) {
+            splashShown = true;
+        }
+    }, [isLoading])
 
     const validateEmail = (value) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -135,156 +147,169 @@ const Login = () => {
         }
     }
 
-    return (
-        <LinearGradient colors={['#1b2125ff', '#051629ff']} className="flex-1">
-            <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
-                <ScrollView
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    <View className="flex-1 w-full px-3 sm:px-6 py-6">
 
-                        {/* Header */}
-                        <View className="flex-row items-center justify-center gap-2 mt-4 mb-4 px-2">
-                            <Key color="white" size={24} strokeWidth={2} />
-                            <Text
-                                style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18 }}
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                                className="text-white flex-shrink"
-                            >
-                                KeyShards
-                            </Text>
-                        </View>
 
-                        {/* Title */}
-                        <View className="items-center mb-4 px-1">
-                            <Text
-                                style={{ fontFamily: 'Montserrat_700Bold', fontSize: 20 }}
-                                numberOfLines={2}
-                                adjustsFontSizeToFit
-                                className="text-white text-center"
-                            >
-                                Unlock Your Vault
-                            </Text>
-                            <Image
-                                source={require('../assets/images/lock.png')}
-                                className="w-16 h-16 sm:w-20 sm:h-20 mt-2 sm:mt-3"
-                                resizeMode="contain"
-                            />
-                        </View>
 
-                        {/* Spacer to center inputs */}
-                        <View className="flex-1" />
 
-                        {/* Inputs */}
-                        <View className="w-full mb-8 sm:mb-10">
-                            <Text
-                                style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                className="text-white mb-1"
-                            >
-                                Email
-                            </Text>
-                            <TextInput
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                textContentType="emailAddress"
-                                placeholder="Email linked to your vault"
-                                placeholderTextColor="#d1d5db"
-                                className="bg-gray-700 text-white rounded-lg px-3 py-2 mb-4"
-                                style={{ fontSize: 14 }}
-                            />
 
-                            <Text
-                                style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                className="text-white mb-1"
-                            >
-                                Master Password
-                            </Text>
-                            <TextInput
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                placeholder="Enter Password"
-                                placeholderTextColor="#d1d5db"
-                                className="bg-gray-700 text-white rounded-lg px-3 py-2"
-                                style={{ fontSize: 14 }}
-                            />
-                        </View>
+    return isLoading ? (<Splash setIsLoading={setIsLoading} />) :
+        (
+            <LinearGradient colors={['#434343', '#000000']} className="flex-1">
+                <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
+                    <Animated.ScrollView
+                        entering={FadeIn.duration(1000)}
+                        contentContainerStyle={{ flexGrow: 1 }}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View className="flex-1 w-full px-3 sm:px-6 py-6">
 
-                        {/* Unlock Button */}
-                        <TouchableOpacity
-                            activeOpacity={loading ? 1 : 0.7}
-                            disabled={loading}
-                            onPress={handleUnlock}
-                            className={` ${loading ? 'bg-[#283963] text-[#cecece]' : 'bg-[#5783F3] text-white'} py-3 rounded-lg mb-6 sm:mb-8`}
-                        >
-                            <Text
-                                style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16 }}
-                                className="text-white text-center"
-                            >
-                                {loading ? 'Unlocking...' : 'Unlock'}
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Status / Error */}
-                        {(!error && status) && (
-                            <View className="items-center mb-6 px-2">
-                                <Text style={{ fontSize: 13 }} className="text-white font-bold text-center">{status}</Text>
+                            {/* Header */}
+                            <View className="flex-row items-center justify-center gap-2 mt-4 mb-4 px-2">
+                                <Key color="white" size={24} strokeWidth={2} />
+                                <Text
+                                    style={{ fontFamily: 'Montserrat_700Bold', fontSize: 18 }}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    className="text-white flex-shrink"
+                                >
+                                    KeyShards
+                                </Text>
                             </View>
-                        )}
 
-                        {error && (
-                            <View className="items-center mb-6 px-2">
-                                <Text style={{ fontSize: 13 }} className="text-red-500 font-bold text-center">{error}</Text>
+                            {/* Title */}
+                            <View className="items-center px-1">
+                                <Text
+                                    style={{ fontFamily: 'Montserrat_700Bold', fontSize: 20 }}
+                                    numberOfLines={2}
+                                    adjustsFontSizeToFit
+                                    className="text-white text-center"
+                                >
+                                    Unlock Your Vault
+                                </Text>
+                                <LottieView
+                                    source={require('../assets/Green eye.json')}
+                                    autoPlay
+                                    loop={true}
+                                    style={{ width: 120, height: 120 }}
+                                />
                             </View>
-                        )}
 
-                        {/* Biometrics */}
-                        <View className="items-center mb-8 sm:mb-12">
-                            <Text
-                                style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                className="text-white mb-4"
-                            >
-                                Or unlock with
-                            </Text>
+                            {/* Spacer to center inputs */}
+                            <View className="flex-1" />
 
-                            <View className="flex-row gap-10 sm:gap-12">
-                                <TouchableOpacity>
-                                    <FingerprintPattern color="white" size={36} strokeWidth={1.5} />
-                                </TouchableOpacity>
-                                <TouchableOpacity>
-                                    <ScanFace color="white" size={36} strokeWidth={1.5} />
+                            {/* Inputs + Button (constrained width) */}
+                            <View style={{ width: '100%', maxWidth: 360, alignSelf: 'center' }}>
+                                {/* Inputs */}
+                                <View className="mb-6 sm:mb-8">
+                                    <Text
+                                        style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
+                                        className="text-white mb-1"
+                                    >
+                                        Email
+                                    </Text>
+                                    <TextInput
+                                        editable={!loading}
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        keyboardType="email-address"
+                                        textContentType="emailAddress"
+                                        placeholder="Email linked to your vault"
+                                        placeholderTextColor="#555"
+                                        className="w-full text-white rounded-xl px-4 py-3 mb-4"
+                                        style={{ fontSize: 14, backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+                                    />
+
+                                    <Text
+                                        style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
+                                        className="text-white mb-1"
+                                    >
+                                        Master Password
+                                    </Text>
+                                    <TextInput
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        editable={!loading}
+                                        secureTextEntry
+                                        placeholder="Enter Password"
+                                        placeholderTextColor="#555"
+                                        className="w-full text-white rounded-xl px-4 py-3"
+                                        style={{ fontSize: 14, backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+                                    />
+                                </View>
+
+                                {/* Unlock Button */}
+                                <TouchableOpacity
+                                    activeOpacity={loading ? 1 : 0.7}
+                                    disabled={loading}
+                                    onPress={handleUnlock}
+                                    className={`w-full max-w-[300] m-auto ${loading ? 'bg-[#2a2a2a]' : 'bg-white'} py-3 rounded-xl mb-6 sm:mb-8`}
+                                >
+                                    <Text
+                                        style={{ fontFamily: 'Montserrat_700Bold', fontSize: 16 }}
+                                        className={loading ? 'text-[#666] text-center' : 'text-black text-center'}
+                                    >
+                                        {loading ? 'Unlocking...' : 'Unlock'}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
+
+                            {/* Status / Error */}
+                            {(!error && status) && (
+                                <View className="items-center mb-6 px-2">
+                                    <Text style={{ fontSize: 13 }} className="text-white font-bold text-center">{status}</Text>
+                                </View>
+                            )}
+
+                            {error && (
+                                <View className="items-center mb-6 px-2">
+                                    <Text style={{ fontSize: 13 }} className="text-red-500 font-bold text-center">{error}</Text>
+                                </View>
+                            )}
+
+                            {/* Biometrics */}
+                            <View className="items-center mb-8 sm:mb-12">
+                                <Text
+                                    style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
+                                    className="text-white mb-4"
+                                >
+                                    Or unlock with
+                                </Text>
+
+                                <View className="flex-row gap-10 sm:gap-12">
+                                    <TouchableOpacity>
+                                        <FingerprintPattern color="white" size={36} strokeWidth={1.5} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity>
+                                        <ScanFace color="white" size={36} strokeWidth={1.5} />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            {/* Create Master */}
+                            <TouchableOpacity className="mb-6 sm:mb-8 px-2" onPress={handleCreateMasterPassword}>
+                                <Text
+                                    style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
+                                    className="text-white/70 text-center underline"
+                                >
+                                    Create Master Password
+                                </Text>
+                            </TouchableOpacity>
+
+                            {/* Spacer pushes footer down */}
+                            <View className="flex-1" />
+                            <View className="flex-row items-center justify-center gap-2 mb-4 px-2">
+                                <MessageCircleWarning size={16} color="white" strokeWidth={2} />
+                                <Text style={{ fontSize: 11 }} className="text-white text-center">
+                                    Your master password never leaves your device
+                                </Text>
+                            </View>
+
                         </View>
-
-                        {/* Create Master */}
-                        <TouchableOpacity className="mb-6 sm:mb-8 px-2" onPress={handleCreateMasterPassword}>
-                            <Text
-                                style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                className="text-blue-400 text-center"
-                            >
-                                Create Master Password
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Spacer pushes footer down */}
-                        <View className="flex-1" />
-                        <View className="flex-row items-center justify-center gap-2 mb-4 px-2">
-                            <MessageCircleWarning size={16} color="white" strokeWidth={2} />
-                            <Text style={{ fontSize: 11 }} className="text-white text-center">
-                                Your master password never leaves your device
-                            </Text>
-                        </View>
-
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        </LinearGradient>
-    )
+                    </Animated.ScrollView>
+                </SafeAreaView>
+            </LinearGradient>
+        )
 }
 
 export default Login
