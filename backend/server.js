@@ -29,6 +29,8 @@ app.set("trust proxy", true)
 app.use(express.json({ limit: '10kb' }))
 
 // Health check endpoint for monitoring and load balancers
+// Note: Not rate-limited intentionally - health checks need to be available
+// for load balancers and monitoring systems to frequently poll
 app.get('/health', async (req, res) => {
     try {
         // Check MongoDB connection
@@ -74,7 +76,7 @@ app.use((req, res) => {
     res.status(404).json({ error: true, message: 'Endpoint not found' })
 })
 
-// Global error handler
+// Global error handler (next parameter required by Express for error middleware signature)
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err)
     res.status(500).json({ error: true, message: 'Internal server error' })
