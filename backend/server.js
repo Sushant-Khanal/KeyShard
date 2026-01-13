@@ -9,6 +9,9 @@ import redis from './middleware/redis-client.js'
 import challengeCreateRoute from './middleware/challenge.js'
 import healthCheckRoute from './routes/healthCheck.js'
 import mongoose from 'mongoose'
+import helmet from 'helmet'
+import cors from 'cors'
+import logger from './core/logger.js'
  dotenv.config()
 
 
@@ -29,10 +32,15 @@ for(const envVar of requiredEnvVars){
 
 
 const app= express()
+
+app.use(cors({
+     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.set("trust proxy", true);
-
-
 const PORT= process.env.PORT
+app.use(helmet())
 app.use(express.json({ limit: '10kb' }))
 
 
@@ -62,6 +70,7 @@ async function startServer(){
 
             const server= app.listen(PORT,()=>{
         console.log(`Server starting in port ${PORT}`)
+                logger.http(`Server is running on port ${PORT}`)
         })
 
         async function shutdown(signal){
