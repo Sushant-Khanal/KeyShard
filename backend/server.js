@@ -39,6 +39,14 @@ app.use(cors({
 }))
 
 app.set("trust proxy", true);
+
+// Global request logging middleware with status code
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        logger.http(`${req.method} ${req.originalUrl} - ${req.ip} - ${res.statusCode}`);
+    });
+    next();
+});
 const PORT= process.env.PORT
 app.use(helmet())
 app.use(express.json({ limit: '10kb' }))
@@ -59,9 +67,9 @@ app.use((req, res) => {
 
 // Global error handler 
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err)
-    res.status(500).json({ error: true, message: 'Internal server error' })
-})
+    logger.error('Unhandled error:', err);
+    res.status(500).json({ error: true, message: 'Internal server error' });
+});
 
 async function startServer(){
     try{
@@ -70,7 +78,7 @@ async function startServer(){
 
             const server= app.listen(PORT,()=>{
         console.log(`Server starting in port ${PORT}`)
-                logger.http(`Server is running on port ${PORT}`)
+                logger.info(`Server is running on port ${PORT}`)
         })
 
         async function shutdown(signal){

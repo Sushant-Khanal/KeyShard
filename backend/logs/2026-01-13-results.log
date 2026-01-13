@@ -1,1 +1,33 @@
 {"level":"http","message":"Server is running on port 4000","timestamp":"2026-01-13T09:44:56.646Z"}
+{"level":"http","message":"Server is running on port 4000","timestamp":"2026-01-13T15:08:00.778Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:16:54.801Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:16:59.041Z"}
+{"level":"http","message":"POST /api/passFetch - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:17:00.706Z"}
+{"level":"http","message":"POST /api/challengeCreate - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:17:00.858Z"}
+{"level":"http","message":"POST /api/newPassword - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:17:01.059Z"}
+{"level":"http","message":"POST /api/challengeCreate - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:17:44.499Z"}
+{"level":"http","message":"POST /api/newPassword - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:17:44.702Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:27:00.539Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:27:14.778Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:27:16.738Z"}
+{"level":"http","message":"Server is running on port 4000","timestamp":"2026-01-13T15:28:08.107Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:28:20.913Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:28:24.643Z"}
+{"level":"info","message":"Server is running on port 4000","timestamp":"2026-01-13T15:29:34.426Z"}
+{
+  message: 'Server is running on port 4000',
+  level: '\x1B[32minfo\x1B[39m',
+  timestamp: '2026-01-13T15:32:05.325Z'
+}
+{"level":"info","message":"Server is running on port 4000","timestamp":"2026-01-13T15:34:29.211Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:35:36.658Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:35:39.743Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67","timestamp":"2026-01-13T15:35:44.393Z"}
+{"level":"info","message":"Server is running on port 4000","timestamp":"2026-01-13T15:36:21.609Z"}
+{"level":"info","message":"Server is running on port 4000","timestamp":"2026-01-13T15:36:38.086Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67 - 200","timestamp":"2026-01-13T15:36:52.814Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67 - 200","timestamp":"2026-01-13T15:36:56.370Z"}
+{"level":"http","message":"POST /api/passFetch - ::ffff:192.168.1.67 - 200","timestamp":"2026-01-13T15:36:57.723Z"}
+{"level":"http","message":"POST /api/challengeCreate - ::ffff:192.168.1.67 - 200","timestamp":"2026-01-13T15:36:57.909Z"}
+{"level":"http","message":"POST /api/newPassword - ::ffff:192.168.1.67 - 200","timestamp":"2026-01-13T15:36:58.251Z"}
+{"level":"http","message":"POST /api/login - ::ffff:192.168.1.67 - 404","timestamp":"2026-01-13T15:37:56.161Z"}

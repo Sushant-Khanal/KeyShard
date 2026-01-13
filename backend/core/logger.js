@@ -26,8 +26,11 @@ const dailyRotateFile= new winston.transports.DailyRotateFile({
     maxFiles:'14d',
     format: format.combine(
         format.errors({stack:true}),
+        
         format.timestamp(),
-        format.json()
+        format.json(),
+   
+        
 
     )
 })
