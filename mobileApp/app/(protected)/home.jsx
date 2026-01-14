@@ -2,7 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react'
 import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe } from 'lucide-react-native'
+import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe, Copy } from 'lucide-react-native'
+import * as Clipboard from 'expo-clipboard';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { getSession } from '../security/secureStore'
 import { encryptPassword } from '../security/aesEncryption'
@@ -373,8 +374,15 @@ const Home = () => {
                                                             />
                                                         )}
                                                         <TouchableOpacity
+                                                            onPress={async () => { if (item.password) await Clipboard.setStringAsync(String(item.password)); }}
+                                                            style={[styles.eyeButton, { right: 40, position: 'absolute', top: '50%', transform: [{ translateY: -10 }] }]}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                        >
+                                                            <Copy color="#888" size={20} />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
                                                             onPress={() => setVisibleId((prev) => prev === item.id ? null : item.id)}
-                                                            style={styles.eyeButton}
+                                                            style={[styles.eyeButton, { right: 10, position: 'absolute', top: '50%', transform: [{ translateY: -10 }] }]}
                                                         >
                                                             {isVisible ? (
                                                                 <EyeOff color="#888" size={20} />

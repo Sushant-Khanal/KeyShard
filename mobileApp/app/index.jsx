@@ -14,6 +14,8 @@ import {
     Key,
     MessageCircleWarning,
     ScanFace,
+    Eye,
+    EyeOff,
 } from 'lucide-react-native'
 import {
     useFonts,
@@ -36,6 +38,7 @@ const Login = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
 
     const [password, setPassword] = useState('')
+    const [passwordVisible, setPasswordVisible] = useState(false)
     const [email, setEmail] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -226,16 +229,29 @@ const Login = () => {
                                     >
                                         Master Password
                                     </Text>
-                                    <TextInput
-                                        value={password}
-                                        onChangeText={setPassword}
-                                        editable={!loading}
-                                        secureTextEntry
-                                        placeholder="Enter Password"
-                                        placeholderTextColor="#555"
-                                        className="w-full text-white rounded-xl px-4 py-3"
-                                        style={{ fontSize: 14, backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
-                                    />
+                                    <View style={{ width: '100%', position: 'relative' }}>
+                                        <TextInput
+                                            value={password}
+                                            onChangeText={setPassword}
+                                            editable={!loading}
+                                            secureTextEntry={!passwordVisible}
+                                            placeholder="Enter Password"
+                                            placeholderTextColor="#555"
+                                            className="w-full text-white rounded-xl px-4 py-3"
+                                            style={{ fontSize: 14, backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', paddingRight: 40 }}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() => setPasswordVisible(v => !v)}
+                                            style={{ position: 'absolute', right: 10, top: '50%', marginTop: -10 }}
+                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                        >
+                                            {passwordVisible ? (
+                                                <EyeOff color="#888" size={20} />
+                                            ) : (
+                                                <Eye color="#888" size={20} />
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
 
                                 {/* Unlock Button */}
