@@ -2,6 +2,7 @@ import { Text, View, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingVi
 import { useForm, Controller } from "react-hook-form"
 import React, { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff, Plus, X, Lock, User, Globe, Tag, MessageSquare, Phone, Mail, Clock, FolderOpen } from "lucide-react-native"
+import { generatePassword } from '../security/passwordGenerator.js';
 import { encryptPassword, decryptPassword } from "../security/aesEncryption"
 import { getSession, setSession } from "../security/secureStore"
 import { navigate } from "expo-router/build/global-state/routing"
@@ -233,385 +234,391 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                             showsVerticalScrollIndicator={false}
                             style={{ flex: 1 }}
                         >
-                        {/* Header */}
-                        <View style={styles.header}>
-                            <View>
-                                <Text style={styles.headerTitle}>New Password</Text>
-                                <Text style={styles.headerSubtitle}>Secure your credentials</Text>
-                            </View>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setTab(false)
-                                    reset()
-                                }}
-                                style={styles.closeButton}
-                            >
-                                <X color="#fff" size={20} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* ========== CREDENTIALS SECTION ========== */}
-                        <View style={styles.sectionCard}>
-                            <View style={styles.sectionHeader}>
-                                <Lock color="#ffffff" size={20} />
-                                <Text style={styles.sectionTitle}>Credentials</Text>
-                            </View>
-                            
-                            <View style={styles.divider} />
-
-                            {/* Title Field */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Title <Text style={styles.required}>*</Text></Text>
-                                <Controller
-                                    control={control}
-                                    name="title"
-                                    rules={{
-                                        required: 'Title is required',
-                                        minLength: {
-                                            value: 3,
-                                            message: 'Title must be at least 3 characters'
-                                        },
+                            {/* Header */}
+                            <View style={styles.header}>
+                                <View>
+                                    <Text style={styles.headerTitle}>New Password</Text>
+                                    <Text style={styles.headerSubtitle}>Secure your credentials</Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setTab(false)
+                                        reset()
                                     }}
-                                    render={({ field: { onChange, onBlur, value }, }) => (
-                                        <View>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="e.g., Gmail, Facebook"
-                                                placeholderTextColor="#666"
-                                                value={value}
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                            />
-                                            {errors.title && (
-                                                <Text style={styles.errorText}>{errors.title.message}</Text>
-                                            )}
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-                            {/* Username Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <User color="#888" size={14} />
-                                    <Text style={styles.label}>Username / Email <Text style={styles.required}>*</Text></Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="username"
-                                    rules={{
-                                        required: 'Username is required',
-                                    }}
-                                    render={({ field: { onChange, onBlur, value }, }) => (
-                                        <View>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="john@example.com"
-                                                placeholderTextColor="#666"
-                                                value={value}
-                                                importantForAutofill="no"
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                                autoCapitalize="none"
-                                            />
-                                            {errors.username && (
-                                                <Text style={styles.errorText}>{errors.username.message}</Text>
-                                            )}
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-                            {/* Password Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <Lock color="#888" size={14} />
-                                    <Text style={styles.label}>Password <Text style={styles.required}>*</Text></Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="password"
-                                    rules={{
-                                        required: 'Password is required',
-                                        minLength: {
-                                            value: 8,
-                                            message: 'Password must be at least 8 characters'
-                                        },
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <View style={styles.passwordContainer}>
-                                            <TextInput
-                                                secureTextEntry={passwordVisibility}
-                                                style={[styles.input, { paddingRight: 50 }]}
-                                                placeholder="Enter password"
-                                                placeholderTextColor="#666"
-                                                value={value}
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                            />
-                                            <TouchableOpacity
-                                                onPress={() => setPasswordVisibility(prev => !prev)}
-                                                style={styles.eyeButton}
-                                            >
-                                                {passwordVisibility ? (
-                                                    <Eye color="#888" size={20} />
-                                                ) : (
-                                                    <EyeOff color="#888" size={20} />
-                                                )}
-                                            </TouchableOpacity>
-                                            {errors.password && (
-                                                <Text style={styles.errorText}>{errors.password.message}</Text>
-                                            )}
-                                        </View>
-                                    )}
-                                />
-                            </View>
-                        </View>
-
-                        {/* ========== WEBSITE SECTION ========== */}
-                        <View style={styles.sectionCard}>
-                            <View style={styles.sectionHeader}>
-                                <Globe color="#ffffff" size={20} />
-                                <Text style={styles.sectionTitle}>Website</Text>
-                            </View>
-                            
-                            <View style={styles.divider} />
-
-                            {/* Website URL Field */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Website URL</Text>
-                                <Controller
-                                    control={control}
-                                    name="url"
-                                    rules={{
-                                        pattern: {
-                                            value: /^https?:\/\/.+/,
-                                            message: 'URL must start with http:// or https://'
-                                        }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <View>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="https://example.com"
-                                                placeholderTextColor="#666"
-                                                value={value}
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                                autoCapitalize="none"
-                                                importantForAutofill="no"
-                                                keyboardType="url"
-                                            />
-                                            {errors.url && (
-                                                <Text style={styles.errorText}>{errors.url.message}</Text>
-                                            )}
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-                            {/* Category Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <FolderOpen color="#888" size={14} />
-                                    <Text style={styles.label}>Category</Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="category"
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="e.g., Email, Social Media, Banking"
-                                            placeholderTextColor="#666"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                            importantForAutofill="no"
-                                        />
-                                    )}
-                                />
-                            </View>
-                        </View>
-
-                        {/* ========== TIMESTAMP SECTION ========== */}
-                        <View style={styles.sectionCard}>
-                            <View style={styles.sectionHeader}>
-                                <Clock color="#ffffff" size={20} />
-                                <Text style={styles.sectionTitle}>Timestamp</Text>
-                            </View>
-                            
-                            <View style={styles.divider} />
-
-                            {/* Created At Field */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Created At</Text>
-                                <Controller
-                                    control={control}
-                                    name="createdAt"
-                                    render={({ field: { value } }) => (
-                                        <View style={styles.timestampBox}>
-                                            <Text style={styles.timestampText}>
-                                                {new Date(value).toLocaleString()}
-                                            </Text>
-                                        </View>
-                                    )}
-                                />
-                            </View>
-                        </View>
-
-                        {/* ========== RECOVERY SECTION ========== */}
-                        <View style={styles.sectionCard}>
-                            <View style={styles.sectionHeader}>
-                                <Mail color="#ffffff" size={20} />
-                                <Text style={styles.sectionTitle}>Recovery</Text>
-                            </View>
-                            
-                            <View style={styles.divider} />
-
-                            {/* Recovery Phone Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <Phone color="#888" size={14} />
-                                    <Text style={styles.label}>Recovery Phone</Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="recoveryPhone"
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="+1234567890"
-                                            placeholderTextColor="#666"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                            keyboardType="phone-pad"
-                                        />
-                                    )}
-                                />
-                            </View>
-
-                            {/* Recovery Email Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <Mail color="#888" size={14} />
-                                    <Text style={styles.label}>Recovery Email</Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="recoveryEmail"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                            message: 'Invalid email address'
-                                        }
-                                    }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <View>
-                                            <TextInput
-                                                style={styles.input}
-                                                placeholder="recovery@example.com"
-                                                placeholderTextColor="#666"
-                                                value={value}
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                                keyboardType="email-address"
-                                            />
-                                            {errors.recoveryEmail && (
-                                                <Text style={styles.errorText}>{errors.recoveryEmail.message}</Text>
-                                            )}
-                                        </View>
-                                    )}
-                                />
-                            </View>
-                        </View>
-
-                        {/* ========== EXTRA SECTION ========== */}
-                        <View style={styles.sectionCard}>
-                            <View style={styles.sectionHeader}>
-                                <MessageSquare color="#ffffff" size={20} />
-                                <Text style={styles.sectionTitle}>Extra</Text>
-                            </View>
-                            
-                            <View style={styles.divider} />
-
-                            {/* Notes Field */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Notes</Text>
-                                <Controller
-                                    control={control}
-                                    name="notes"
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.input, styles.textArea]}
-                                            placeholder="Additional information..."
-                                            placeholderTextColor="#666"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                            multiline
-                                            numberOfLines={4}
-                                            textAlignVertical="top"
-                                        />
-                                    )}
-                                />
-                            </View>
-
-                            {/* Tags Field */}
-                            <View style={styles.inputGroup}>
-                                <View style={styles.labelRow}>
-                                    <Tag color="#888" size={14} />
-                                    <Text style={styles.label}>Tags</Text>
-                                </View>
-                                <Controller
-                                    control={control}
-                                    name="tags"
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="work, important, 2fa"
-                                            placeholderTextColor="#666"
-                                            value={value}
-                                            onChangeText={onChange}
-                                            onBlur={onBlur}
-                                        />
-                                    )}
-                                />
-                                <Text style={styles.helperText}>
-                                    Separate tags with commas
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* ========== SUBMIT BUTTONS ========== */}
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity
-                                onPress={handleSubmit(onSubmit, onError)}
-                                style={styles.primaryButton}
-                            >
-                                <LinearGradient
-                                    colors={['#ffffff', '#e0e0e0']}
-                                    style={styles.buttonGradient}
+                                    style={styles.closeButton}
                                 >
-                                    <Text style={styles.primaryButtonText}>
-                                        Save Password
-                                    </Text>
-                                </LinearGradient>
-                            </TouchableOpacity>
+                                    <X color="#fff" size={20} />
+                                </TouchableOpacity>
+                            </View>
 
-                            <TouchableOpacity
-                                onPress={() => reset()}
-                                style={styles.secondaryButton}
-                            >
-                                <Text style={styles.secondaryButtonText}>
-                                    Reset Form
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </LinearGradient>
+                            {/* ========== CREDENTIALS SECTION ========== */}
+                            <View style={styles.sectionCard}>
+                                <View style={styles.sectionHeader}>
+                                    <Lock color="#ffffff" size={20} />
+                                    <Text style={styles.sectionTitle}>Credentials</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Title Field */}
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Title <Text style={styles.required}>*</Text></Text>
+                                    <Controller
+                                        control={control}
+                                        name="title"
+                                        rules={{
+                                            required: 'Title is required',
+                                            minLength: {
+                                                value: 3,
+                                                message: 'Title must be at least 3 characters'
+                                            },
+                                        }}
+                                        render={({ field: { onChange, onBlur, value }, }) => (
+                                            <View>
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="e.g., Gmail, Facebook"
+                                                    placeholderTextColor="#666"
+                                                    value={value}
+                                                    onChangeText={onChange}
+                                                    onBlur={onBlur}
+                                                />
+                                                {errors.title && (
+                                                    <Text style={styles.errorText}>{errors.title.message}</Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Username Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <User color="#888" size={14} />
+                                        <Text style={styles.label}>Username / Email <Text style={styles.required}>*</Text></Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="username"
+                                        rules={{
+                                            required: 'Username is required',
+                                        }}
+                                        render={({ field: { onChange, onBlur, value }, }) => (
+                                            <View>
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="john@example.com"
+                                                    placeholderTextColor="#666"
+                                                    value={value}
+                                                    importantForAutofill="no"
+                                                    onChangeText={onChange}
+                                                    onBlur={onBlur}
+                                                    autoCapitalize="none"
+                                                />
+                                                {errors.username && (
+                                                    <Text style={styles.errorText}>{errors.username.message}</Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Password Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <Lock color="#888" size={14} />
+                                        <Text style={styles.label}>Password <Text style={styles.required}>*</Text></Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="password"
+                                        rules={{
+                                            required: 'Password is required',
+                                            minLength: {
+                                                value: 8,
+                                                message: 'Password must be at least 8 characters'
+                                            },
+                                        }}
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <View style={[styles.passwordContainer, { flexDirection: 'row', alignItems: 'center', position: 'relative' }]}>
+                                                <TextInput
+                                                    secureTextEntry={passwordVisibility}
+                                                    style={[styles.input, { flex: 1, paddingRight: 90 }]}
+                                                    placeholder="Enter password"
+                                                    placeholderTextColor="#666"
+                                                    value={value}
+                                                    onChangeText={onChange}
+                                                    onBlur={onBlur}
+                                                />
+                                                <TouchableOpacity
+                                                    onPress={() => onChange(generatePassword())}
+                                                    style={[styles.eyeButton, { position: 'absolute', right: 60, top: '50%', marginTop: -16, backgroundColor: 'white', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 8 }]}
+                                                >
+                                                    <Text style={{ fontSize: 12, color: 'black', fontWeight: 'bold' }}>Generate</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={() => setPasswordVisibility(prev => !prev)}
+                                                    style={[styles.eyeButton, { position: 'absolute', right: 20, top: '50%', marginTop: -10 }]}
+                                                >
+                                                    {passwordVisibility ? (
+                                                        <Eye color="#888" size={20} />
+                                                    ) : (
+                                                        <EyeOff color="#888" size={20} />
+                                                    )}
+                                                </TouchableOpacity>
+                                                {errors.password && (
+                                                    <Text style={styles.errorText}>{errors.password.message}</Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* ========== WEBSITE SECTION ========== */}
+                            <View style={styles.sectionCard}>
+                                <View style={styles.sectionHeader}>
+                                    <Globe color="#ffffff" size={20} />
+                                    <Text style={styles.sectionTitle}>Website</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Website URL Field */}
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Website URL</Text>
+                                    <Controller
+                                        control={control}
+                                        name="url"
+                                        rules={{
+                                            pattern: {
+                                                value: /^https?:\/\/.+/,
+                                                message: 'URL must start with http:// or https://'
+                                            }
+                                        }}
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <View>
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="https://example.com"
+                                                    placeholderTextColor="#666"
+                                                    value={value}
+                                                    onChangeText={onChange}
+                                                    onBlur={onBlur}
+                                                    autoCapitalize="none"
+                                                    importantForAutofill="no"
+                                                    keyboardType="url"
+                                                />
+                                                {errors.url && (
+                                                    <Text style={styles.errorText}>{errors.url.message}</Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Category Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <FolderOpen color="#888" size={14} />
+                                        <Text style={styles.label}>Category</Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="category"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="e.g., Email, Social Media, Banking"
+                                                placeholderTextColor="#666"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                importantForAutofill="no"
+                                            />
+                                        )}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* ========== TIMESTAMP SECTION ========== */}
+                            <View style={styles.sectionCard}>
+                                <View style={styles.sectionHeader}>
+                                    <Clock color="#ffffff" size={20} />
+                                    <Text style={styles.sectionTitle}>Timestamp</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Created At Field */}
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Created At</Text>
+                                    <Controller
+                                        control={control}
+                                        name="createdAt"
+                                        render={({ field: { value } }) => (
+                                            <View style={styles.timestampBox}>
+                                                <Text style={styles.timestampText}>
+                                                    {new Date(value).toLocaleString()}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* ========== RECOVERY SECTION ========== */}
+                            <View style={styles.sectionCard}>
+                                <View style={styles.sectionHeader}>
+                                    <Mail color="#ffffff" size={20} />
+                                    <Text style={styles.sectionTitle}>Recovery</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Recovery Phone Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <Phone color="#888" size={14} />
+                                        <Text style={styles.label}>Recovery Phone</Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="recoveryPhone"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="+1234567890"
+                                                placeholderTextColor="#666"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                keyboardType="phone-pad"
+                                            />
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Recovery Email Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <Mail color="#888" size={14} />
+                                        <Text style={styles.label}>Recovery Email</Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="recoveryEmail"
+                                        rules={{
+                                            pattern: {
+                                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                                message: 'Invalid email address'
+                                            }
+                                        }}
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <View>
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder="recovery@example.com"
+                                                    placeholderTextColor="#666"
+                                                    value={value}
+                                                    onChangeText={onChange}
+                                                    onBlur={onBlur}
+                                                    keyboardType="email-address"
+                                                />
+                                                {errors.recoveryEmail && (
+                                                    <Text style={styles.errorText}>{errors.recoveryEmail.message}</Text>
+                                                )}
+                                            </View>
+                                        )}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* ========== EXTRA SECTION ========== */}
+                            <View style={styles.sectionCard}>
+                                <View style={styles.sectionHeader}>
+                                    <MessageSquare color="#ffffff" size={20} />
+                                    <Text style={styles.sectionTitle}>Extra</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Notes Field */}
+                                <View style={styles.inputGroup}>
+                                    <Text style={styles.label}>Notes</Text>
+                                    <Controller
+                                        control={control}
+                                        name="notes"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <TextInput
+                                                style={[styles.input, styles.textArea]}
+                                                placeholder="Additional information..."
+                                                placeholderTextColor="#666"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                multiline
+                                                numberOfLines={4}
+                                                textAlignVertical="top"
+                                            />
+                                        )}
+                                    />
+                                </View>
+
+                                {/* Tags Field */}
+                                <View style={styles.inputGroup}>
+                                    <View style={styles.labelRow}>
+                                        <Tag color="#888" size={14} />
+                                        <Text style={styles.label}>Tags</Text>
+                                    </View>
+                                    <Controller
+                                        control={control}
+                                        name="tags"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="work, important, 2fa"
+                                                placeholderTextColor="#666"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                            />
+                                        )}
+                                    />
+                                    <Text style={styles.helperText}>
+                                        Separate tags with commas
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* ========== SUBMIT BUTTONS ========== */}
+                            <View style={styles.buttonContainer}>
+                                <TouchableOpacity
+                                    onPress={handleSubmit(onSubmit, onError)}
+                                    style={styles.primaryButton}
+                                >
+                                    <LinearGradient
+                                        colors={['#ffffff', '#e0e0e0']}
+                                        style={styles.buttonGradient}
+                                    >
+                                        <Text style={styles.primaryButtonText}>
+                                            Save Password
+                                        </Text>
+                                    </LinearGradient>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => reset()}
+                                    style={styles.secondaryButton}
+                                >
+                                    <Text style={styles.secondaryButtonText}>
+                                        Reset Form
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                </LinearGradient>
             </Modal>
         ) : (
             <TouchableOpacity

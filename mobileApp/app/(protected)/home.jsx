@@ -2,7 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React, { useEffect, useState } from 'react'
 import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe } from 'lucide-react-native'
+import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe, Copy } from 'lucide-react-native'
+import * as Clipboard from 'expo-clipboard';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { getSession } from '../security/secureStore'
 import { encryptPassword } from '../security/aesEncryption'
@@ -11,6 +12,8 @@ import Constants from 'expo-constants'
 import { ed } from '../security/signatureEd'
 import PasswordForm from '../components/PasswordForm'
 import Animated, { FadeInDown, FadeIn, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Avatar from './Avatar'
+import Footer from './Footer'
 
 const Home = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
@@ -218,7 +221,10 @@ const Home = () => {
                 <Animated.View
                     entering={FadeIn.duration(800)}
                     style={styles.mainContent}
+                    className="relative"
                 >
+
+                    <Avatar />
                     {/* HEADER */}
                     <View style={styles.header}>
                         <Text style={[styles.headerTitle, { fontFamily: 'Montserrat_700Bold' }]}>
@@ -286,7 +292,7 @@ const Home = () => {
                                                     </View>
                                                 </View>
                                             </View>
-                                            
+
                                             {!isEditing && (
                                                 <View style={styles.actionButtons}>
                                                     <TouchableOpacity
@@ -373,8 +379,15 @@ const Home = () => {
                                                             />
                                                         )}
                                                         <TouchableOpacity
+                                                            onPress={async () => { if (item.password) await Clipboard.setStringAsync(String(item.password)); }}
+                                                            style={[styles.eyeButton, { right: 40, position: 'absolute', top: '50%', transform: [{ translateY: -10 }] }]}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                        >
+                                                            <Copy color="#888" size={20} />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
                                                             onPress={() => setVisibleId((prev) => prev === item.id ? null : item.id)}
-                                                            style={styles.eyeButton}
+                                                            style={[styles.eyeButton, { right: 10, position: 'absolute', top: '50%', transform: [{ translateY: -10 }] }]}
                                                         >
                                                             {isVisible ? (
                                                                 <EyeOff color="#888" size={20} />
@@ -542,16 +555,19 @@ const Home = () => {
                                 <Text style={styles.emptySubtitle}>Add your first password to get started</Text>
                             </View>
                         )}
+
+
                     </ScrollView>
 
                     {/* FOOTER */}
-                    <View style={styles.bottomFooter}>
+                    {/* <View style={styles.bottomFooter}>
                         <ShieldCheck size={16} color="#555" />
                         <Text style={[styles.bottomFooterText, { fontFamily: 'Montserrat_400Regular' }]}>
                             AES-256 encrypted • Stored locally
                         </Text>
-                    </View>
+                    </View> */}
                 </Animated.View>
+                <Footer currentPage='home' />
             </SafeAreaView>
         </LinearGradient>
     )
@@ -575,7 +591,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     headerTitle: {
-        fontSize: 32,
+        fontSize: 30,
         color: '#ffffff',
         letterSpacing: -1,
     },
