@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeft, Key } from "lucide-react-native";
+import { ArrowLeft, Key, Eye, EyeOff, Copy } from "lucide-react-native";
 import React, { useEffect } from "react";
 import {
   Text,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
+import * as Clipboard from "expo-clipboard";
 import {
   useFonts,
   Montserrat_400Regular,
@@ -24,15 +25,15 @@ import * as Crypto from "expo-crypto";
 import { fromByteArray } from "react-native-quick-base64";
 import PasswordStrength from "./PasswordStrength.jsx";
 import Constants from "expo-constants";
-import {
-  analyzePassword,
-  loadModel,
-} from "../passwordAnalysis/passwordStrength.js";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { generatePassword } from "../security/passwordGenerator.js";
 
 const SignUp = () => {
   const { localhost } = Constants.expoConfig?.extra ?? {};
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [passMatch, setpassMatch] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -76,6 +77,13 @@ const SignUp = () => {
     const modelUri = "./assests/passwordModel.onnx";
     loadModel(modelUri);
   }, []);
+
+  function handlePasswordGenerate() {
+    const customPassword = generatePassword();
+    setPassword(customPassword);
+    setConfirmPassword(customPassword);
+    console.log(customPassword);
+  }
 
   const handleSignUp = async () => {
     setLoading(true);
@@ -161,7 +169,7 @@ const SignUp = () => {
 
   return (
     <LinearGradient
-      colors={["#1b2125ff", "#051629ff"]}
+      colors={["#434343", "#000000"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       className="flex-1"
@@ -172,7 +180,8 @@ const SignUp = () => {
           className="flex-1"
           keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
         >
-          <ScrollView
+          <Animated.ScrollView
+            entering={FadeIn.duration(1000)}
             contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -192,9 +201,9 @@ const SignUp = () => {
               />
             </TouchableOpacity>
 
-            <View className="flex-1 border-b border-blue-500 w-11/12 sm:w-4/5 mx-auto justify-center px-2 py-20">
+            <View className="w-11/12 sm:w-4/5 mx-auto px-2 py-8">
               {/* Top Logo */}
-              <View className="flex-row border-b border-blue-500 py-1 mb-8 items-center gap-1 self-center">
+              <View className="flex-row border-b border-white/30 py-1 mb-8 items-center gap-1 self-center">
                 <Key color={"white"} size={26} strokeWidth={2} />
                 <Text
                   style={{ fontFamily: "Montserrat_700Bold", fontSize: 18 }}
@@ -238,142 +247,231 @@ const SignUp = () => {
                 </Text>
               </View>
 
-              <View className="flex w-full justify-center items-center mt-6">
-                <View className="flex w-full justify-center items-center">
-                  <Text
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 12,
-                    }}
-                    className="mr-auto text-white font-medium"
-                  >
-                    Email{" "}
-                    <Text style={{ fontSize: 11 }} className="font-light">
-                      (Only used to link your vault)
+              {/* Constrained form container to match index.jsx */}
+              <View
+                style={{ width: "100%", maxWidth: 360, alignSelf: "center" }}
+              >
+                <View className="flex w-full justify-center items-center mt-6">
+                  <View className="flex w-full justify-center items-center">
+                    <Text
+                      style={{
+                        fontFamily: "Montserrat_400Regular",
+                        fontSize: 12,
+                      }}
+                      className="mr-auto text-white font-medium"
+                    >
+                      Email{" "}
+                      <Text style={{ fontSize: 11 }} className="font-light">
+                        (Only used to link your vault)
+                      </Text>
                     </Text>
-                  </Text>
-                  <TextInput
-                    secureTextEntry={false}
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 14,
-                    }}
-                    onChangeText={(text) => setEmail(text)}
-                    value={email}
-                    placeholder="Enter Email"
-                    color={"white"}
-                    placeholderTextColor={"#9ca3af"}
-                    className="w-full px-3 py-2 text-white mt-2 bg-gray-700 rounded-lg mb-4"
-                  />
+                    <TextInput
+                      secureTextEntry={false}
+                      editable={!loading}
+                      style={{
+                        fontFamily: "Montserrat_400Regular",
+                        fontSize: 14,
+                        backgroundColor: "#1a1a1a",
+                        borderWidth: 1,
+                        borderColor: "rgba(255,255,255,0.2)",
+                      }}
+                      onChangeText={(text) => setEmail(text)}
+                      value={email}
+                      placeholder="Enter Email"
+                      color={"white"}
+                      placeholderTextColor={"#555"}
+                      className="w-full px-4 py-3 text-white mt-2 rounded-xl mb-4"
+                    />
+                  </View>
+
+                  <View className="flex w-full justify-center items-center">
+                    <Text
+                      style={{
+                        fontFamily: "Montserrat_400Regular",
+                        fontSize: 12,
+                      }}
+                      className="mr-auto text-white font-medium"
+                    >
+                      New Master Password{" "}
+                    </Text>
+                    <View
+                      style={{
+                        width: "100%",
+                        position: "relative",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 8,
+                        marginBottom: 16,
+                      }}
+                    >
+                      <TextInput
+                        secureTextEntry={!passwordVisible}
+                        editable={!loading}
+                        style={{
+                          flex: 1,
+                          fontFamily: "Montserrat_400Regular",
+                          fontSize: 14,
+                          backgroundColor: "#1a1a1a",
+                          borderWidth: 1,
+                          borderColor: "rgba(255,255,255,0.2)",
+                          paddingRight: 80,
+                        }}
+                        onChangeText={(text) => setPassword(text)}
+                        value={password}
+                        placeholder="Enter Password"
+                        color={"white"}
+                        placeholderTextColor={"#555"}
+                        className="w-full px-4 py-3 text-white rounded-xl"
+                      />
+                      <TouchableOpacity
+                        onPress={handlePasswordGenerate}
+                        style={{
+                          position: "absolute",
+                          right: 68,
+                          top: 8,
+                          backgroundColor: "white",
+                          borderRadius: 6,
+                          paddingVertical: 6,
+                          paddingHorizontal: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Montserrat_400Regular",
+                            fontSize: 12,
+                            color: "black",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Generate
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          if (password)
+                            await Clipboard.setStringAsync(password);
+                        }}
+                        style={{ position: "absolute", right: 38, top: 12 }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Copy color="#888" size={20} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setPasswordVisible((v) => !v)}
+                        style={{ position: "absolute", right: 8, top: 12 }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        {passwordVisible ? (
+                          <EyeOff color="#888" size={20} />
+                        ) : (
+                          <Eye color="#888" size={20} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View className="flex w-full justify-center items-center">
+                    <Text
+                      style={{
+                        fontFamily: "Montserrat_400Regular",
+                        fontSize: 12,
+                      }}
+                      className="mr-auto text-white font-medium"
+                    >
+                      Confirm Password
+                    </Text>
+                    <View style={{ width: "100%", position: "relative" }}>
+                      <TextInput
+                        secureTextEntry={!confirmPasswordVisible}
+                        editable={!loading}
+                        style={{
+                          fontFamily: "Montserrat_400Regular",
+                          fontSize: 14,
+                          backgroundColor: "#1a1a1a",
+                          borderWidth: 1,
+                          borderColor: "rgba(255,255,255,0.2)",
+                          paddingRight: 40,
+                        }}
+                        onChangeText={(text) => setConfirmPassword(text)}
+                        value={confirmPassword}
+                        placeholder="Re-Enter Password"
+                        color={"white"}
+                        placeholderTextColor={"#555"}
+                        className="w-full px-4 py-3 text-white mt-2 rounded-xl"
+                      />
+                      <TouchableOpacity
+                        onPress={() => setConfirmPasswordVisible((v) => !v)}
+                        style={{ position: "absolute", right: 10, top: 18 }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        {confirmPasswordVisible ? (
+                          <EyeOff color="#888" size={20} />
+                        ) : (
+                          <Eye color="#888" size={20} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                    {!passMatch && (
+                      <Text
+                        style={{ fontSize: 12 }}
+                        className="text-red-500 mt-2 mr-auto"
+                      >
+                        Password does not match
+                      </Text>
+                    )}
+                  </View>
                 </View>
 
-                <View className="flex w-full justify-center items-center">
-                  <Text
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 12,
-                    }}
-                    className="mr-auto text-white font-medium"
-                  >
-                    New Master Password
-                  </Text>
-                  <TextInput
-                    secureTextEntry={true}
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 14,
-                    }}
-                    onChangeText={(text) => setPassword(text)}
-                    value={password}
-                    placeholder="Enter Password"
-                    color={"white"}
-                    placeholderTextColor={"#9ca3af"}
-                    className="w-full px-3 py-2 text-white mt-2 bg-gray-700 rounded-lg mb-4"
-                  />
-                </View>
+                {/* Password Strength - Now visible above keyboard */}
+                <PasswordStrength password={password} />
 
-                <View className="flex w-full justify-center items-center">
-                  <Text
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 12,
-                    }}
-                    className="mr-auto text-white font-medium"
-                  >
-                    Confirm Password
-                  </Text>
-                  <TextInput
-                    secureTextEntry={true}
-                    style={{
-                      fontFamily: "Montserrat_400Regular",
-                      fontSize: 14,
-                    }}
-                    onChangeText={(text) => setConfirmPassword(text)}
-                    value={confirmPassword}
-                    placeholder="Re-Enter Password"
-                    color={"white"}
-                    placeholderTextColor={"#9ca3af"}
-                    className="w-full px-3 py-2 text-white mt-2 bg-gray-700 rounded-lg"
-                  />
-                  {!passMatch && (
+                {error && (
+                  <View className="mt-2 px-2">
                     <Text
                       style={{ fontSize: 12 }}
-                      className="text-red-500 mt-2 mr-auto"
+                      className="text-red-500 font-bold text-center"
                     >
-                      Password does not match
+                      {error}
                     </Text>
-                  )}
-                </View>
-              </View>
+                  </View>
+                )}
 
-              {/* Password Strength - Now visible above keyboard */}
-              <PasswordStrength password={password} />
-
-              {error && (
-                <View className="mt-2 px-2">
+                {loading && (
                   <Text
                     style={{ fontSize: 12 }}
-                    className="text-red-500 font-bold text-center"
+                    className="mt-4 text-white font-bold text-center"
                   >
-                    {error}
+                    Encrypting your vault. This may take a moment…
                   </Text>
-                </View>
-              )}
+                )}
 
-              {loading && (
-                <Text
-                  style={{ fontSize: 12 }}
-                  className="mt-4 text-white font-bold text-center"
-                >
-                  Encrypting your vault. This may take a moment…
-                </Text>
-              )}
+                {success && (
+                  <Text
+                    style={{ fontSize: 12 }}
+                    className="mt-4 text-white font-bold text-center"
+                  >
+                    Vault Created Successfully. Navigating you to SignIn
+                    Page{" "}
+                  </Text>
+                )}
 
-              {success && (
-                <Text
-                  style={{ fontSize: 12 }}
-                  className="mt-4 text-white font-bold text-center"
+                {/* Bottom Button */}
+                <TouchableOpacity
+                  disabled={loading || !pass}
+                  activeOpacity={loading || !pass ? 1 : 0.7}
+                  onPress={handleSignUp}
+                  className={`w-full max-w-[300] m-auto mt-6 mb-4 flex justify-center items-center py-3 ${loading || !pass ? "bg-[#2a2a2a]" : "bg-white"} rounded-xl`}
                 >
-                  Vault Created Successfully. Navigating you to SignIn Page{" "}
-                </Text>
-              )}
-
-              {/* Bottom Button */}
-              <TouchableOpacity
-                disabled={loading || !pass}
-                activeOpacity={loading || !pass ? 1 : 0.7}
-                onPress={handleSignUp}
-                className={`w-full mt-6 mb-4 flex justify-center items-center py-3 ${loading ? "bg-[#283963] text-[#cecece]" : "bg-[#5783F3] text-white"} rounded-md`}
-              >
-                <Text
-                  style={{ fontFamily: "Montserrat_700Bold", fontSize: 16 }}
-                  className="text-white"
-                >
-                  {loading ? "Creating..." : "Create Vault"}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={{ fontFamily: "Montserrat_700Bold", fontSize: 16 }}
+                    className={loading || !pass ? "text-[#666]" : "text-black"}
+                  >
+                    {loading ? "Creating..." : "Create Vault"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </ScrollView>
+          </Animated.ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>

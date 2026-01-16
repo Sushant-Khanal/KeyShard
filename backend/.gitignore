@@ -68,3 +68,7 @@ vendor/bundle/
 
 # Testing
 coverage/
+
+
+#Logs
+.logs/
