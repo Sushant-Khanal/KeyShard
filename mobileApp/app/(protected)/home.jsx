@@ -12,6 +12,8 @@ import Constants from 'expo-constants'
 import { ed } from '../security/signatureEd'
 import PasswordForm from '../components/PasswordForm'
 import Animated, { FadeInDown, FadeIn, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Avatar from './Avatar'
+import Footer from './Footer'
 
 const Home = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
@@ -219,7 +221,10 @@ const Home = () => {
                 <Animated.View
                     entering={FadeIn.duration(800)}
                     style={styles.mainContent}
+                    className="relative"
                 >
+
+                    <Avatar />
                     {/* HEADER */}
                     <View style={styles.header}>
                         <Text style={[styles.headerTitle, { fontFamily: 'Montserrat_700Bold' }]}>
@@ -287,7 +292,7 @@ const Home = () => {
                                                     </View>
                                                 </View>
                                             </View>
-                                            
+
                                             {!isEditing && (
                                                 <View style={styles.actionButtons}>
                                                     <TouchableOpacity
@@ -550,16 +555,19 @@ const Home = () => {
                                 <Text style={styles.emptySubtitle}>Add your first password to get started</Text>
                             </View>
                         )}
+
+
                     </ScrollView>
 
                     {/* FOOTER */}
-                    <View style={styles.bottomFooter}>
+                    {/* <View style={styles.bottomFooter}>
                         <ShieldCheck size={16} color="#555" />
                         <Text style={[styles.bottomFooterText, { fontFamily: 'Montserrat_400Regular' }]}>
                             AES-256 encrypted • Stored locally
                         </Text>
-                    </View>
+                    </View> */}
                 </Animated.View>
+                <Footer currentPage='home' />
             </SafeAreaView>
         </LinearGradient>
     )
@@ -583,7 +591,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     headerTitle: {
-        fontSize: 32,
+        fontSize: 30,
         color: '#ffffff',
         letterSpacing: -1,
     },

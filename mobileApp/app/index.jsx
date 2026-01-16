@@ -30,13 +30,15 @@ import Constants from 'expo-constants'
 import Splash from './screens/Splash'
 import LottieView from 'lottie-react-native'
 import Animated, { FadeIn } from 'react-native-reanimated'
+import * as LocalAuthentication from 'expo-local-authentication';
 
 // Global flag to track if splash was shown
 let splashShown = false;
 
 const Login = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
-
+    const [isBiometricSupported, setBioMetricSupported] = useState(false)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [password, setPassword] = useState('')
     const [passwordVisible, setPasswordVisible] = useState(false)
     const [email, setEmail] = useState('')
@@ -54,6 +56,13 @@ const Login = () => {
     function handleCreateMasterPassword() {
         navigate('./components/signup')
     }
+
+    useEffect(() => {
+        async () => {
+            const compatible = await LocalAuthentication.hasHardwareAsync()
+            setBioMetricSupported(compatible)
+        }
+    }, [])
 
     useEffect(() => {
         if (!isLoading) {
@@ -285,30 +294,33 @@ const Login = () => {
 
                             {/* Biometrics */}
                             <View className="items-center mb-8 sm:mb-12">
-                                <Text
-                                    style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                    className="text-white mb-4"
-                                >
-                                    Or unlock with
-                                </Text>
 
-                                <View className="flex-row gap-10 sm:gap-12">
+                                <TouchableOpacity onPress={() => navigate('./components/ForgotPassword')} className="">
+                                    <Text
+                                        style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
+                                        className="text-white mb-4 underline"
+                                    >
+                                        Forgot your password?
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {/* <View className="flex-row gap-10 sm:gap-12">
                                     <TouchableOpacity>
                                         <FingerprintPattern color="white" size={36} strokeWidth={1.5} />
                                     </TouchableOpacity>
                                     <TouchableOpacity>
                                         <ScanFace color="white" size={36} strokeWidth={1.5} />
                                     </TouchableOpacity>
-                                </View>
+                                </View> */}
                             </View>
 
                             {/* Create Master */}
-                            <TouchableOpacity className="mb-6 sm:mb-8 px-2" onPress={handleCreateMasterPassword}>
+                            <TouchableOpacity className="mb-6 sm:mb-8 px-2 border-b-1 border-blue-500" onPress={handleCreateMasterPassword}>
                                 <Text
                                     style={{ fontFamily: 'Montserrat_400Regular', fontSize: 13 }}
-                                    className="text-white/70 text-center underline"
+                                    className="text-white  text-center underline"
                                 >
-                                    Create Master Password
+                                    Create New Password Vault
                                 </Text>
                             </TouchableOpacity>
 
