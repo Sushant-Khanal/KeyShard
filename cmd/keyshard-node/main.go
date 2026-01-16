@@ -64,6 +64,9 @@ func main() {
 	http.HandleFunc("/update", server.UpdateHandler)
 	http.HandleFunc("/user", server.CreateUserHandler)
 	http.HandleFunc("/user/get", server.GetUserHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Keyshard server is running"))
+	})
 
 	log.Printf("Node %s listening on %s", cfg.NodeID, cfg.HTTPAddr)
 	log.Fatal(http.ListenAndServe(cfg.HTTPAddr, nil))

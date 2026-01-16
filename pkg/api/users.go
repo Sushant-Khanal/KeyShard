@@ -36,6 +36,16 @@ func (s *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// Secondary index: email -> userHash
+	emailKey := "email:" + user.Email
+	err = s.db.Put(&store.Entry{
+		Key:   emailKey,
+		Value: []byte(user.UserHash),
+	})
+	if err != nil {
+		http.Error(w, "failed to store email index", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "user stored",
@@ -43,11 +53,29 @@ func (s *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetUserHandler retrieves a user either by userHash or by email
 func (s *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	userHash := r.URL.Query().Get("userHash")
-	key := "user:" + userHash
+	email := r.URL.Query().Get("email")
 
-	entry, err := s.db.Get(key)
+	// If email is provided, lookup the userHash first
+	if email != "" {
+		emailEntry, err := s.db.Get("email:" + email)
+		if err != nil {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+		userHash = string(emailEntry.Value)
+	}
+
+	if userHash == "" {
+		http.Error(w, "userHash or email required", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch user by userHash
+	userKey := "user:" + userHash
+	entry, err := s.db.Get(userKey)
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
