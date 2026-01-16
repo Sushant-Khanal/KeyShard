@@ -15,13 +15,16 @@
   "dependencies": {
     "@noble/ed25519": "^3.0.0",
     "@noble/hashes": "^2.0.1",
-    "axios": "^1.13.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "expo-random": "^14.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "mongoose": "^9.0.1",
     "nodemon": "^3.1.11",
-    "redis": "^5.10.0"
+    "redis": "^5.10.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

@@ -1,9 +1,33 @@
-import axios from 'axios'
-import dotenv from 'dotenv'
-dotenv.config();
-const goDb = axios.create({
-  baseURL: process.env.GO_DB_BASE_URL,
-  timeout: parseInt(process.env.GO_DB_TIMEOUT || '5000'),
-})
+import mongoose from "mongoose";
+import dotenv from 'dotenv';
+dotenv.config()
 
-export default goDb
+async function connectdb(){
+    try{
+        const connect= await mongoose.connect(process.env.MONGO_URL,{
+            maxPoolSize:10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        })
+        console.log("Database Connected", connect.connection.host,connect.connection.name)
+        
+        mongoose.connection.on('error',(error)=>{
+            console.error('MongoDb connection error',error)
+        })
+
+        mongoose.connection.on('disconnected', () => {
+            console.warn('MongoDB disconnected')
+        })
+
+         mongoose.connection.on('reconnected', () => {
+            console.log('MongoDB reconnected')
+        })
+
+    }catch(error){
+        console.error("Database connection failed:", error)
+        throw error
+
+    }
+}
+
+export default connectdb
