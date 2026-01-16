@@ -30,6 +30,11 @@ const UserSchema= new mongoose.Schema({
         unique:true,
         required:true
     },
+    publicKeyBase64:{
+      type:String,
+        unique:true,
+        required:true
+    },
      createdAt: {
     type: Date,
     default: Date.now
