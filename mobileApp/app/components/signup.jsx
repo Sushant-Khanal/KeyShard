@@ -24,6 +24,10 @@ import * as Crypto from "expo-crypto";
 import { fromByteArray } from "react-native-quick-base64";
 import PasswordStrength from "./PasswordStrength.jsx";
 import Constants from "expo-constants";
+import {
+  analyzePassword,
+  loadModel,
+} from "../passwordAnalysis/passwordStrength.js";
 
 const SignUp = () => {
   const { localhost } = Constants.expoConfig?.extra ?? {};
@@ -66,6 +70,12 @@ const SignUp = () => {
       setpassMatch(true);
     }
   }, [confirmPassword, password]);
+
+  useEffect(() => {
+    // Load the ONNX model when the component mounts
+    const modelUri = "./assests/passwordModel.onnx";
+    loadModel(modelUri);
+  }, []);
 
   const handleSignUp = async () => {
     setLoading(true);
