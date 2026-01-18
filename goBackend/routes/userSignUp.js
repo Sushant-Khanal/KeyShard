@@ -8,32 +8,26 @@ import  goDB  from '../middleware/dbConnection.js';
 const router = express.Router()
 
 
-router.post('/signup',async (req,res)=>{
-    //const session= await mongoose.startSession();
-    try{
-        const {email, encryptedVault,iv,tag,userHash,salt,publicKeyBase64}= req.body
-        console.log('publicKeyBase64backend:',publicKeyBase64)
+router.post('/signup', async (req, res) => {
+  try {
+    const {
+      email,
+      encryptedVault,
+      iv,
+      tag,
+      userHash,
+      salt,
+      publicKeyBase64
+    } = req.body;
 
-        if(!email || !encryptedVault || !userHash ){
-          return  res.status(400).json({
-            error:true,
-            message:"Vault and Email must be provided"
-        })
-        }
+    if (!email || !encryptedVault || !userHash) {
+      return res.status(400).json({
+        error: true,
+        message: "Vault and Email must be provided"
+      });
+    }
 
-
-        //session.startTransaction()
-
-        const userCheck= await goDB.get('/user/get',{
-        params: { email }
-        }).catch(()=>null)
-
-        if(userCheck?.data){
-           // await session.abortTransaction()
-          return  res.status(409).json({error:true,message:"Email is already registered"})
-        }
-             
-        const response= await goDB.post('/user', {
+    const payload = {
       email,
       encryptedVault,
       iv,
@@ -41,25 +35,26 @@ router.post('/signup',async (req,res)=>{
       salt,
       userHash,
       publicKeyBase64
-    }).catch((err) => {
-      console.error('GoDB /user POST error:', err.response?.data || err.message)
-      return null
-    })
+    };
 
-        
+    Object.keys(payload).forEach(
+      key => payload[key] === undefined && delete payload[key]
+    );
 
-            // await session.commitTransaction()
-          res.status(201).json({error:false,message:"Vault Created Sucessfully"})
-        
-    }catch(error){
-      //  await session.abortTransaction()
-        console.log(error)
-        res.status(500).json({
-            error: true,
-            message: "Internal server error"
-        })
-    }
-})
+    await goDB.post('/user', payload, {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    res.status(201).json({
+      error: false,
+      message: "Vault Created Successfully"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: true, message: "Internal server error" });
+  }
+});
 
 
 export default router

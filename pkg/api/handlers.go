@@ -1,17 +1,19 @@
 package api
 
 import (
-	"Keyshard/pkg/shard"
-	"Keyshard/pkg/store"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	"Keyshard/pkg/shard"
+	"Keyshard/pkg/store"
 )
 
 type Server struct {
-	db     store.Store // 🔥 use interface, not concrete Database
+	db     store.Store
 	ring   *shard.Ring
 	nodeID string
 }
@@ -24,15 +26,27 @@ func NewServer(db store.Store, ring *shard.Ring, nodeID string) *Server {
 	}
 }
 
-// Timeout for forwarding requests
 const forwardTimeout = 3 * time.Second
 
-/* ------------------ helpers ------------------ */
+/* ===================== HELPERS ===================== */
+
+func readAndRestoreBody(r *http.Request) ([]byte, error) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	return bodyBytes, nil
+}
+
+/* ===================== ROUTING ===================== */
 
 func (s *Server) routeOrHandle(
 	w http.ResponseWriter,
 	r *http.Request,
 	key string,
+	bodyBytes []byte,
 	localHandler func() error,
 ) {
 	if key == "" {
@@ -40,45 +54,50 @@ func (s *Server) routeOrHandle(
 		return
 	}
 
-	// Lookup owner of the key
 	owner, err := s.ring.Lookup(key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// If current node owns the key, handle locally
+	// Handle locally
 	if owner.Name == s.nodeID {
-		err := localHandler()
-		fmt.Fprintf(w, "Node=%s Error=%v", s.nodeID, err)
+		if err := localHandler(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
-	// Forward with failover
-	nodes := s.ring.AllMembers() // all nodes in the ring
+	client := &http.Client{Timeout: forwardTimeout}
+	nodes := s.ring.AllMembers()
 	tried := map[string]bool{}
 	current := owner
-
-	client := &http.Client{
-		Timeout: forwardTimeout,
-	}
 
 	for len(tried) < len(nodes) {
 		if tried[current.Name] {
 			current = s.ring.NextNode(current)
 			continue
 		}
-
 		tried[current.Name] = true
 
-		// build request
-		target := fmt.Sprintf("http://%s%s?%s", current.Address, r.URL.Path, r.URL.RawQuery)
-		req, err := http.NewRequest(r.Method, target, r.Body)
+		target := fmt.Sprintf(
+			"http://%s%s?%s",
+			current.Address,
+			r.URL.Path,
+			r.URL.RawQuery,
+		)
+
+		req, err := http.NewRequest(
+			r.Method,
+			target,
+			io.NopCloser(bytes.NewReader(bodyBytes)),
+		)
 		if err != nil {
 			current = s.ring.NextNode(current)
 			continue
 		}
-		req.Header = r.Header
+
+		req.Header = r.Header.Clone()
 
 		resp, err := client.Do(req)
 		if err == nil {
@@ -89,28 +108,23 @@ func (s *Server) routeOrHandle(
 			return
 		}
 
-		// Node down → try next
 		current = s.ring.NextNode(current)
 	}
 
-	// If we reach here, truly all nodes failed
-	http.Error(w, "All nodes unreachable for key "+key, http.StatusBadGateway)
+	http.Error(w, "all nodes unreachable", http.StatusBadGateway)
 }
 
-/* ------------------ handlers ------------------ */
+/* ===================== KV HANDLERS ===================== */
 
 func (s *Server) GetHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
-
 	entry, err := s.db.Get(key)
 
 	w.Header().Set("Content-Type", "application/json")
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{
-			"error": "key not found",
-		})
+		json.NewEncoder(w).Encode(map[string]string{"error": "key not found"})
 		return
 	}
 
@@ -133,10 +147,7 @@ func (s *Server) SetHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
-			"status": "error",
-			"error":  err.Error(),
-		})
+		json.NewEncoder(w).Encode(map[string]string{"status": "error"})
 		return
 	}
 
@@ -147,14 +158,15 @@ func (s *Server) SetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) UpdateHandler(w http.ResponseWriter, r *http.Request) {
-	// Update == Put (KV semantics)
 	s.SetHandler(w, r)
 }
 
 func (s *Server) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 
-	s.routeOrHandle(w, r, key, func() error {
+	bodyBytes, _ := readAndRestoreBody(r)
+
+	s.routeOrHandle(w, r, key, bodyBytes, func() error {
 		return s.db.Delete(key)
 	})
 }
