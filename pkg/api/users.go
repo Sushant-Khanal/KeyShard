@@ -5,6 +5,8 @@ import (
 	"Keyshard/pkg/store"
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -110,6 +112,38 @@ func (s *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to store email key", http.StatusInternalServerError)
 		return
 	}
+	// Replicate to other nodes
+	nodes := s.ring.AllMembers()
+	for _, node := range nodes {
+		// Skip self
+		if node.Name == s.nodeID {
+			continue
+		}
+
+		go func(nodeAddr string) {
+			client := &http.Client{Timeout: 2 * time.Second}
+
+			// Replicate userHash key
+			req1, _ := http.NewRequest(
+				http.MethodPost,
+				fmt.Sprintf("http://%s/replicate", nodeAddr),
+				bytes.NewReader(data),
+			)
+			req1.Header.Set("X-Key", "user:"+user.UserHash)
+			req1.Header.Set("Content-Type", "application/json")
+			client.Do(req1)
+
+			// Replicate email key
+			req2, _ := http.NewRequest(
+				http.MethodPost,
+				fmt.Sprintf("http://%s/replicate", nodeAddr),
+				bytes.NewReader(data),
+			)
+			req2.Header.Set("X-Key", "email:"+user.Email)
+			req2.Header.Set("Content-Type", "application/json")
+			client.Do(req2)
+		}(node.Address)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -138,4 +172,25 @@ func (s *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(entry.Value)
+}
+
+func (s *Server) ReplicateHandler(w http.ResponseWriter, r *http.Request) {
+	key := r.Header.Get("X-Key")
+	if key == "" {
+		http.Error(w, "missing key header", http.StatusBadRequest)
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.db.Put(&store.Entry{Key: key, Value: bodyBytes}); err != nil {
+		http.Error(w, "failed to replicate", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

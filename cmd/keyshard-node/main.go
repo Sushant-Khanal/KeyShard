@@ -67,7 +67,8 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Keyshard server is running"))
 	})
-
+	http.HandleFunc("/replicate", server.ReplicateHandler)
+	http.HandleFunc("/simplereplicate", server.SimpleReplicateHandler)
 	log.Printf("Node %s listening on %s", cfg.NodeID, cfg.HTTPAddr)
 	log.Fatal(http.ListenAndServe(cfg.HTTPAddr, nil))
 }

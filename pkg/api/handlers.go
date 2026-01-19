@@ -118,42 +118,108 @@ func (s *Server) routeOrHandle(
 
 func (s *Server) GetHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
-	entry, err := s.db.Get(key)
-
-	w.Header().Set("Content-Type", "application/json")
-
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "key not found"})
+	if key == "" {
+		http.Error(w, "key required", http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"key":   key,
-		"value": string(entry.Value),
+	bodyBytes, _ := readAndRestoreBody(r)
+
+	s.routeOrHandle(w, r, key, bodyBytes, func() error {
+		entry, err := s.db.Get(key)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "key not found",
+			})
+			return nil
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		// entry.Value already contains JSON
+		w.Write(entry.Value)
+		return nil
 	})
 }
 
 func (s *Server) SetHandler(w http.ResponseWriter, r *http.Request) {
-	key := r.URL.Query().Get("key")
-	value := r.URL.Query().Get("value")
+	var payload struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
 
-	err := s.db.Put(&store.Entry{
-		Key:   key,
-		Value: []byte(value),
-	})
-
-	w.Header().Set("Content-Type", "application/json")
-
+	bodyBytes, err := readAndRestoreBody(r)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"status": "error"})
+		http.Error(w, "invalid body", http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"status": "success",
-		"node":   s.nodeID,
+	if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	if payload.Key == "" {
+		http.Error(w, "key required", http.StatusBadRequest)
+		return
+	}
+
+	data, _ := json.Marshal(payload)
+
+	// Lookup primary node for sharding
+	primary, err := s.ring.Lookup(payload.Key)
+	if err != nil {
+		http.Error(w, "failed to lookup shard", http.StatusInternalServerError)
+		return
+	}
+
+	allnodes := s.ring.AllMembers()
+	replicas := []*shard.Member{primary}
+
+	// Get next 2 nodes for replication
+	current := primary
+	for i := 0; i < 2; i++ {
+		current = s.ring.NextNode(current)
+		replicas = append(replicas, current)
+	}
+
+	// Send data to primary + replicas
+	for _, node := range replicas {
+		if node.Name == s.nodeID {
+			// store locally
+			s.db.Put(&store.Entry{Key: payload.Key, Value: data})
+		} else {
+			// send to other node
+			go func(addr string) {
+				client := &http.Client{Timeout: 2 * time.Second}
+				req, _ := http.NewRequest(http.MethodPost,
+					fmt.Sprintf("http://%s/simplereplicate", addr),
+					bytes.NewReader(data),
+				)
+				req.Header.Set("X-Key", payload.Key)
+				req.Header.Set("Content-Type", "application/json")
+				client.Do(req)
+			}(node.Address)
+		}
+	}
+	// Return primary + replica nodes for info
+	replicaNames := []string{}
+	for _, r := range replicas[1:] { // skip primary
+		replicaNames = append(replicaNames, r.Name)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":   "success",
+		"primary":  primary.Name,
+		"replicas": replicaNames,
+		"allNodes": func() []string { // now `allNodes` is actually used
+			names := []string{}
+			for _, n := range allnodes {
+				names = append(names, n.Name)
+			}
+			return names
+		}(),
 	})
 }
 
@@ -169,4 +235,20 @@ func (s *Server) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	s.routeOrHandle(w, r, key, bodyBytes, func() error {
 		return s.db.Delete(key)
 	})
+}
+
+func (s *Server) SimpleReplicateHandler(w http.ResponseWriter, r *http.Request) {
+	key := r.Header.Get("X-Key")
+	if key == "" {
+		http.Error(w, "missing key header", http.StatusBadRequest)
+		return
+	}
+
+	bodyBytes, _ := io.ReadAll(r.Body)
+	if err := s.db.Put(&store.Entry{Key: key, Value: bodyBytes}); err != nil {
+		http.Error(w, "failed to replicate", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
