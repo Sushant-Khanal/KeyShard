@@ -229,11 +229,50 @@ func (s *Server) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
+	if key == "" {
+		http.Error(w, "key required", http.StatusBadRequest)
+		return
+	}
 
-	bodyBytes, _ := readAndRestoreBody(r)
+	// Lookup primary
+	primary, err := s.ring.Lookup(key)
+	if err != nil {
+		http.Error(w, "failed to lookup shard", http.StatusInternalServerError)
+		return
+	}
 
-	s.routeOrHandle(w, r, key, bodyBytes, func() error {
-		return s.db.Delete(key)
+	// Build replica list (primary + next 2)
+	replicas := []*shard.Member{primary}
+	current := primary
+	for i := 0; i < 2; i++ {
+		current = s.ring.NextNode(current)
+		replicas = append(replicas, current)
+	}
+
+	// Delete from all replicas
+	for _, node := range replicas {
+		if node.Name == s.nodeID {
+			// local delete
+			_ = s.db.Delete(key)
+		} else {
+			go func(addr string) {
+				client := &http.Client{Timeout: 2 * time.Second}
+				req, _ := http.NewRequest(
+					http.MethodDelete,
+					fmt.Sprintf("http://%s/simplereplicate/delete", addr),
+					nil,
+				)
+				req.Header.Set("X-Key", key)
+				client.Do(req)
+			}(node.Address)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":   "deleted",
+		"primary":  primary.Name,
+		"replicas": []string{replicas[1].Name, replicas[2].Name},
 	})
 }
 
@@ -247,6 +286,21 @@ func (s *Server) SimpleReplicateHandler(w http.ResponseWriter, r *http.Request) 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	if err := s.db.Put(&store.Entry{Key: key, Value: bodyBytes}); err != nil {
 		http.Error(w, "failed to replicate", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+func (s *Server) SimpleReplicaDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	key := r.Header.Get("X-Key")
+	if key == "" {
+		http.Error(w, "missing key header", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.db.Delete(key); err != nil {
+		// idempotent delete — not an error if missing
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 

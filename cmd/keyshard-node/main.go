@@ -69,6 +69,8 @@ func main() {
 	})
 	http.HandleFunc("/replicate", server.ReplicateHandler)
 	http.HandleFunc("/simplereplicate", server.SimpleReplicateHandler)
+	http.HandleFunc("/simplereplicate/delete", server.SimpleReplicaDeleteHandler)
+
 	log.Printf("Node %s listening on %s", cfg.NodeID, cfg.HTTPAddr)
 	log.Fatal(http.ListenAndServe(cfg.HTTPAddr, nil))
 }
