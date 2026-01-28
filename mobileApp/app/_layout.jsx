@@ -1,6 +1,6 @@
 import { Slot } from 'expo-router';
 import "../global.css";
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { clearSession } from './security/secureStore';
 import { useRouter } from 'expo-router';
@@ -23,5 +23,9 @@ export default function RootLayout() {
 
         return () => subscription.remove()
     }, [])
-    return <Slot />;
+    return (
+        <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+            <Slot />
+        </View>
+    );
 }

@@ -109,7 +109,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
 
       setPassword(JSON.parse(fetchedPassword));
     } catch (error) {
-      console.log(error);
+      // Error handled silently in production
     }
   }
 
@@ -118,12 +118,11 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
   }, []);
 
   useEffect(() => {
-    console.log(error);
+    // Error state changed
   }, [error]);
 
   async function handleNewPassword(session) {
     try {
-      console.log("passwordhahahaha");
       const encrypt = await encryptPassword(
         JSON.stringify(password),
         fromByteArray(session?.vaultKey)
@@ -141,7 +140,6 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
         salt: session?.salt,
         privateKey: session?.privateKey,
       });
-      console.log("newpasssecure: ", encryptedVault);
 
       const { userHash } = getSession();
       const response1 = await fetch(`${localhost}/api/challengeCreate`, {
@@ -159,12 +157,9 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
 
       const { challengeB64, challengeIdB64 } = result1.message;
       const challenge = toByteArray(challengeB64);
-      console.log(session);
       const privateKey = session?.privateKey;
-      console.log("privatekeypassword", privateKey);
       const signature = await ed.signAsync(challenge, privateKey);
       const signatureB64 = fromByteArray(signature);
-      console.log("frontendchallanege:", challengeB64);
 
       const response = await fetch(`${localhost}/api/newPassword`, {
         method: "POST",
@@ -189,21 +184,16 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
       setSuccess(result.message);
       handleUpdatedPassword(password);
     } catch (error) {
-      console.log(error);
+      // Error handled silently in production
     }
   }
 
   useEffect(() => {
-    console.log(password);
     if (passRef.current !== password && password.length > 0) {
-      console.log(password);
-
       const session = getSession();
       if (session?.vaultKey) {
-        console.log("no session");
+        handleNewPassword(session);
       }
-
-      handleNewPassword(session);
     }
 
     passRef.current = password;
@@ -229,7 +219,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
   };
 
   const onError = (errors) => {
-    console.log("Validation errors:", errors);
+    // Validation errors handled by form
   };
 
   return tab ? (
