@@ -15,7 +15,6 @@ const session= {
 
 
 export function setSession(data) {
-  console.log("Session Set",data.privateKey)
   session.vaultKey = toByteArray(data.vaultKey)
   session.salt = data.salt
   session.iv = data.iv
@@ -31,8 +30,6 @@ export function getSession() {
 
 
 export function clearSession(){
-
-    console.log("session cleared")
     if (session.vaultKey instanceof Uint8Array) session.vaultKey.fill(0)
     if (session.privateKey instanceof Uint8Array) session.privateKey.fill(0)
     session.vaultKey= null,

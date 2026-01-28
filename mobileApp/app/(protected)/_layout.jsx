@@ -2,6 +2,7 @@ import { Slot, Redirect, useRouter } from "expo-router";
 import { getSession } from "../security/secureStore";
 import "../../global.css";
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 
 export default function RootLayout() {
   const [hasSession, setHasSession] = useState(false);
@@ -25,5 +26,9 @@ export default function RootLayout() {
     return <Redirect href="/" />;
   }
 
-  return <Slot />;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+      <Slot />
+    </View>
+  );
 }
