@@ -1,58 +1,60 @@
 {
-    "length": {
-        "impact": 0.27026261958724307,
-        "min_target": 12
+  "version": "1.0",
+  "baseline": "weak",
+  "rules": [
+    {
+      "feature": "length",
+      "display_name": "Password length",
+      "condition": "<",
+      "target": 12,
+      "impact": 0.27026261958724307,
+      "priority": 1,
+      "message": "Increase password length to at least 12 characters"
     },
-    "lowercase_count": {
-        "impact": 0.013951578450506602,
-        "min_target": 1
+    {
+      "feature": "entropy",
+      "display_name": "Password entropy",
+      "condition": "<",
+      "target": 3.0,
+      "impact": 0.030438074170694503,
+      "priority": 2,
+      "message": "Use a more random mix of characters"
     },
-    "uppercase_count": {
-        "impact": 0.007828482198649232,
-        "min_target": 1
+    {
+      "feature": "lowercase_count",
+      "display_name": "Lowercase letters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.013951578450506602,
+      "priority": 3,
+      "message": "Add at least one lowercase letter"
     },
-    "digit_count": {
-        "impact": 0.012706215161254576,
-        "min_target": 1
+    {
+      "feature": "digit_count",
+      "display_name": "Numbers",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.012706215161254576,
+      "priority": 4,
+      "message": "Include at least one number"
     },
-    "special_count": {
-        "impact": 0.0012970549306293422,
-        "min_target": 1
+    {
+      "feature": "uppercase_count",
+      "display_name": "Uppercase letters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.007828482198649232,
+      "priority": 5,
+      "message": "Add at least one uppercase letter"
     },
-    "entropy": {
-        "impact": 0.030438074170694503,
-        "min_target": 3.0
-    },
-    "transitions": {
-        "impact": 0.007108026244935122,
-        "min_target": 3.0
-    },
-    "max_repeat": {
-        "impact": 0.0069870832401615,
-        "min_target": 3.0
-    },
-    "leet_count": {
-        "impact": 0.0034403237679949527,
-        "min_target": 1
-    },
-    "is_common_root": {
-        "impact": 0.0,
-        "min_target": 3.0
-    },
-    "shape_complexity": {
-        "impact": 0.009330630016757779,
-        "min_target": 3.0
-    },
-    "pattern_intensity": {
-        "impact": 0.001717822013303712,
-        "min_target": 3.0
-    },
-    "habit_score": {
-        "impact": 0.009713930703151021,
-        "min_target": 3.0
-    },
-    "char_diversity": {
-        "impact": 0.0016242512809066566,
-        "min_target": 3.0
+    {
+      "feature": "special_count",
+      "display_name": "Special characters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.0012970549306293422,
+      "priority": 6,
+      "message": "Add a special character like !@#$%"
     }
+  ]
 }

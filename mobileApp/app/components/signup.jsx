@@ -72,11 +72,11 @@ const SignUp = () => {
     }
   }, [confirmPassword, password]);
 
-  useEffect(() => {
-    // Load the ONNX model when the component mounts
-    const modelUri = "./assests/passwordModel.onnx";
-    loadModel(modelUri);
-  }, []);
+  // useEffect(() => {
+  //   // Load the ONNX model when the component mounts
+  //   const modelUri = "./assests/passwordModel.onnx";
+  //   loadModel(modelUri);
+  // }, []);
 
   function handlePasswordGenerate() {
     const customPassword = generatePassword();
@@ -105,7 +105,7 @@ const SignUp = () => {
       const salt = fromByteArray(Crypto.getRandomValues(new Uint8Array(32)));
       const { vaultKey, userHash, publicKeyBase64 } = await genMasterKey(
         password,
-        salt
+        salt,
       );
       console.log(
         "vaultKey: ",
@@ -113,7 +113,7 @@ const SignUp = () => {
         "userHash:",
         userHash,
         "publicKeyBase64 : ",
-        publicKeyBase64
+        publicKeyBase64,
       );
 
       if (!vaultKey || !userHash || !publicKeyBase64) {
@@ -123,7 +123,7 @@ const SignUp = () => {
 
       const { encryptedVault, iv, tag } = await encryptPassword(
         JSON.stringify([]),
-        vaultKey
+        vaultKey,
       );
       console.log("Encrypted Vault: ", encryptedVault);
 
