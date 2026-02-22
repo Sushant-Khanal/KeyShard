@@ -38,13 +38,14 @@ go.work.sum
 node_modules/              # If you use Jupyter extensions
 
 # --- Python & Environment ---
-__pycache__/               # Compiled Python files
-*.py[cod]                  # Compiled bytecode
-*$py.class                 # Compiled bytecode
-.venv/                     # Virtual environment folder (highly recommended)
-venv/                      # Alternative venv name
-env/                       # Another common venv name
-.env                       # Secret environment variables (API keys, etc.)
+# --- Python & Environment ---
+**/__pycache__/             # Matches __pycache__ anywhere in the tree
+*.py[cod]
+.venv/
+venv/
+mlBackend/venv/             # Explicitly target your specific backend venv
+**/venv/                    # Catch any folder named venv at any depth
+.env
 
 # --- Machine Learning Specifics ---
 # Data (Ignore large files you don't want on GitHub)
