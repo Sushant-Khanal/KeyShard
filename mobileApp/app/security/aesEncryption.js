@@ -9,13 +9,11 @@ import AesGcmCrypto from 'react-native-aes-gcm-crypto';
  export async  function encryptPassword(data,key){
     
     try{
-        console.log(typeof(data))
         if(!key || !data){
             return "Key and data missing for encryption"
         }
       
         const StringData= typeof(data)==='string'? data:JSON.stringify(data)
-        console.log(key)
         const {iv,tag,content}= await AesGcmCrypto.encrypt(
             StringData,
             false,
@@ -25,7 +23,7 @@ import AesGcmCrypto from 'react-native-aes-gcm-crypto';
        
         return {encryptedVault:content,iv,tag}
     }catch(error){
-        console.log(error)
+        // Error handled silently in production
     }
 }
 
@@ -39,10 +37,9 @@ export async  function decryptPassword(encryptedVault,vaultKey,iv,tag){
         tag,
         false
     )
-    console.log("VaultLength: ",decryptedVault.length)
     return decryptedVault
    }catch(error){
-    console.log(error)
+    // Error handled silently in production
    }
 }
 

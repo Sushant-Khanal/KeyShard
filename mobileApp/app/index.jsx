@@ -142,20 +142,21 @@ const Login = () => {
       }
 
       setStatus("Success, Loading your vault...");
-      console.log("loginprivatekey:", privateKey);
       setSession({ vaultKey, iv, tag, salt, userHash, privateKey });
 
       setTimeout(() => {
         const session = getSession();
         if (session?.vaultKey) {
+          // Clear sensitive state before navigation
+          setPassword("");
+          setEmail("");
           navigate("/(protected)/home");
         }
       }, 1000);
     } catch (err) {
-      console.log(err);
+      // Error handled silently in production
     } finally {
       setLoading(false);
-      console.log("loading:", loading);
     }
   }
 

@@ -27,17 +27,17 @@
 // /**
 //  * Loads the ONNX model. Should be called once at app startup.
 //  */
-// // export const loadModel = async (modelUri) => {
-// //   try {
-// //     session = await ort.InferenceSession.create(modelUri);
-// //     console.log("ONNX Model Loaded Successfully");
-// //     console.log(session);
-// //     return true;
-// //   } catch (e) {
-// //     console.error("Failed to load ONNX model", e);
-// //     return false;
-// //   }
-// // };
+// export const loadModel = async (modelUri) => {
+//   try {
+//     session = await ort.InferenceSession.create(modelUri);
+//     console.log("ONNX Model Loaded Successfully");
+//     console.log(session);
+//     return true;
+//   } catch (e) {
+//     console.error("Failed to load ONNX model", e);
+//     return false;
+//   }
+// };
 
 // /**
 //  * Internal helper to generate SHAP-based recommendations

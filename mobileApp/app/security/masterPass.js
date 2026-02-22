@@ -43,22 +43,10 @@ const challenge= toByteArray("123456")
 
     const userKeyHash= sha256(hk2)
     const publicKeyBase64= fromByteArray(publicKey)
-
-    console.log("Unit8 VaultKey: ",hk1)
-    console.log("Unit8 UserKey: ",hk2)
-    console.log("Uint8 PrivateKey: ",privateKey)
-    console.log("Base64 UserHash: ",userKeyHash)
-    console.log("publicKey: ",publicKey)
-    console.log("signature: ",signature)
-    console.log("isValid",isValid)
-    
-    
-   
-     
        
     return {vaultKey:fromByteArray(hk1),userHash:bytesToHex(userKeyHash),publicKeyBase64:publicKeyBase64,privateKey:privateKey}
     }catch(e){
-        console.log(e)
+        // Error handled silently in production
     }
 }
 

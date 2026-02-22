@@ -72,12 +72,6 @@ const SignUp = () => {
     }
   }, [confirmPassword, password]);
 
-  // useEffect(() => {
-  //   // Load the ONNX model when the component mounts
-  //   const modelUri = "./assests/passwordModel.onnx";
-  //   loadModel(modelUri);
-  // }, []);
-
   function handlePasswordGenerate() {
     const customPassword = generatePassword();
     setPassword(customPassword);

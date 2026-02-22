@@ -36,8 +36,8 @@ const Avatar = () => {
                 className="p-1 bg-white border-green-500 border-2 rounded-full"
             >
                 <SvgUri
-                    width={65}
-                    height={65}
+                    width={50}
+                    height={50}
                     uri={`https://api.dicebear.com/9.x/adventurer/svg?seed=${userHash}`}
                 />
             </TouchableOpacity>
@@ -45,7 +45,7 @@ const Avatar = () => {
             {active && (
                 <TouchableOpacity
                     onPress={handleLogout}
-                    className="absolute top-24 right-0 bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 flex-row items-center gap-2"
+                    className="absolute top-16 right-0 bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 flex-row items-center gap-2"
                 >
                     <LogOut size={18} color="#ef4444" />
                     <Text className="text-red-500 font-semibold">Logout</Text>

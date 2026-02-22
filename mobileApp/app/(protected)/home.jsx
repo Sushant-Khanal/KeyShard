@@ -104,7 +104,6 @@ const Home = () => {
                             setPassword(updatedPasswords)
                             Alert.alert('Success', 'Password deleted successfully')
                         } catch (error) {
-                            console.log('Delete error:', error)
                             Alert.alert('Error', 'Failed to delete password')
                         }
                     }
@@ -153,7 +152,6 @@ const Home = () => {
                 body: JSON.stringify({ userHash: userHash })
             })
             const result1 = await response1.json()
-            console.log("result1", result1)
             if (!response1.ok) {
                 Alert.alert('Error', result1.message || 'Failed to create challenge')
                 return
@@ -191,7 +189,6 @@ const Home = () => {
             setEditValues({})
             Alert.alert('Success', 'Password updated successfully')
         } catch (error) {
-            console.log('Edit save error:', error)
             Alert.alert('Error', 'Failed to update password')
         }
     }
@@ -202,7 +199,7 @@ const Home = () => {
     }
 
     useEffect(() => {
-        console.log('homepass:', password)
+        // Password state updated
     }, [password])
 
     if (!fontsLoaded) return null
