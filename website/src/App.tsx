@@ -252,22 +252,9 @@ function useInView(ref: React.RefObject<HTMLElement>) {
   return v;
 }
 
-function Typing({ word }: { word: string }) {
-  const [txt, setTxt] = useState("");
-  const [del, setDel] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (!del && txt.length < word.length) setTxt(word.slice(0, txt.length+1));
-      else if (!del) setTimeout(()=>setDel(true), 2400);
-      else if (del && txt.length > 0) setTxt(word.slice(0, txt.length-1));
-      else setDel(false);
-    }, del ? 45 : 80);
-    return ()=>clearTimeout(t);
-  },[txt, del, word]);
-  return <>{txt}<span className="cur">_</span></>;
-}
 
-// Smooth scroll to section, accounting for fixed 52px nav
+
+
 function scrollTo(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -299,7 +286,6 @@ export default function KeyShard() {
     <>
       <style>{CSS}</style>
 
-      {/* ── Nav ── */}
       <nav className={scrolled?"scrolled":""}>
         <a href="#" className="logo">
           <div className="logo-diamond"><div className="logo-diamond-fill"/></div>
@@ -313,7 +299,7 @@ export default function KeyShard() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
+ 
       <div className="hero">
         <div className="grid-bg"/>
         <div className="scan"/>
@@ -349,7 +335,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
+   
       <div className="stat-grid">
         {[["440K","Passwords in training set"],["80.42%","ML macro accuracy"],["AES-256-GCM","Encryption standard"],["5-NODE","Default cluster"]].map(([v,l])=>(
           <div key={l} className="stat-cell">
@@ -359,7 +345,7 @@ export default function KeyShard() {
         ))}
       </div>
 
-      {/* ── Features ── */}
+      
       <div id="features" className="section" style={{borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap">
           <div className="label">Capabilities</div>
@@ -385,7 +371,6 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── Flow ── */}
       <div className="section" style={{background:"var(--bg2)",borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap">
           <div className="label">Authentication Flow</div>
@@ -410,7 +395,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── Security + demo ── */}
+      
       <div id="security" className="section" style={{borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap two-col">
           <div>
@@ -451,7 +436,7 @@ export default function KeyShard() {
             </div>
           </div>
 
-          {/* Strength tester */}
+          
           <div>
             <div className="label">Live Demo</div>
             <h3 className="disp" style={{fontSize:"2rem",marginBottom:22}}>STRENGTH ANALYZER</h3>
@@ -499,7 +484,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── ML Engine ── */}
+   
       <div id="ml" className="section" style={{background:"var(--bg2)",borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap two-col">
           <div>
@@ -569,7 +554,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── Stack ── */}
+   
       <div id="stack" className="section" style={{borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap">
           <div className="label">Technology</div>
@@ -599,7 +584,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── CTA ── */}
+   
       <div className="section" style={{background:"var(--bg2)",borderBottom:"1px solid var(--bd)"}}>
         <div className="wrap two-col" style={{alignItems:"center"}}>
           <h2 className="disp" style={{fontSize:"clamp(3rem,7vw,6rem)",lineHeight:.88}}>
@@ -621,7 +606,7 @@ export default function KeyShard() {
         </div>
       </div>
 
-      {/* ── Footer ── */}
+  
       <footer style={{borderTop:"1px solid var(--bd)",padding:"24px 28px"}}>
         <div className="wrap" style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:14}}>
           <div style={{display:"flex",alignItems:"center",gap:9}}>
