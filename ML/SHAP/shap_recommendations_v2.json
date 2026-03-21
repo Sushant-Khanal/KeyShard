@@ -1,0 +1,124 @@
+{
+  "version": "2.0",
+  "baseline": "weak",
+  "labeling": "combined zxcvbn + password-strength",
+  "rules": [
+    {
+      "feature": "length",
+      "display_name": "Password length",
+      "condition": "<",
+      "target": 12,
+      "impact": 6.698269844055176,
+      "priority": 1,
+      "message": "Increase password length to at least 12 characters"
+    },
+    {
+      "feature": "entropy",
+      "display_name": "Password entropy",
+      "condition": "<",
+      "target": 3.0,
+      "impact": 1.8311209678649902,
+      "priority": 2,
+      "message": "Use a more random mix of characters to increase unpredictability"
+    },
+    {
+      "feature": "digit_count",
+      "display_name": "Numbers",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.27449846267700195,
+      "priority": 3,
+      "message": "Include at least one number"
+    },
+    {
+      "feature": "lowercase_count",
+      "display_name": "Lowercase letters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.26069462299346924,
+      "priority": 4,
+      "message": "Add at least one lowercase letter"
+    },
+    {
+      "feature": "pattern_intensity",
+      "display_name": "Keyboard patterns",
+      "condition": ">",
+      "target": 2,
+      "impact": 0.13668744398117065,
+      "priority": 5,
+      "message": "Avoid keyboard patterns like 'qwerty' or '12345'"
+    },
+    {
+      "feature": "char_diversity",
+      "display_name": "Character diversity",
+      "condition": "<",
+      "target": 3,
+      "impact": 0.10659033060073853,
+      "priority": 6,
+      "message": "Use a mix of uppercase, lowercase, numbers, and special characters"
+    },
+    {
+      "feature": "transitions",
+      "display_name": "Character type variety",
+      "condition": "<",
+      "target": 3,
+      "impact": 0.1059660091996193,
+      "priority": 7,
+      "message": "Mix different character types throughout your password, not just at the start or end"
+    },
+    {
+      "feature": "habit_score",
+      "display_name": "Predictable habits",
+      "condition": ">",
+      "target": 1,
+      "impact": 0.07093054056167603,
+      "priority": 8,
+      "message": "Avoid predictable patterns like starting with a capital letter, ending with a number, or including a year"
+    },
+    {
+      "feature": "leet_count",
+      "display_name": "Leet substitutions",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.06396809220314026,
+      "priority": 9,
+      "message": "Consider adding symbol substitutions like @ or $ to improve complexity"
+    },
+    {
+      "feature": "special_count",
+      "display_name": "Special characters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.05038014426827431,
+      "priority": 10,
+      "message": "Add at least one special character like !@#$%"
+    },
+    {
+      "feature": "max_repeat",
+      "display_name": "Repeated characters",
+      "condition": ">",
+      "target": 3,
+      "impact": 0.05429424718022347,
+      "priority": 11,
+      "message": "Avoid repeating the same character multiple times in a row"
+    },
+    {
+      "feature": "uppercase_count",
+      "display_name": "Uppercase letters",
+      "condition": "<",
+      "target": 1,
+      "impact": 0.03613606840372086,
+      "priority": 12,
+      "message": "Add at least one uppercase letter"
+    },
+    {
+      "feature": "is_common_root",
+      "display_name": "Common password words",
+      "condition": ">",
+      "target": 0,
+      "impact": 0.01499730907380581,
+      "priority": 13,
+      "message": "Avoid common words like 'password', 'admin', or 'qwerty'"
+    }
+  ]
+}

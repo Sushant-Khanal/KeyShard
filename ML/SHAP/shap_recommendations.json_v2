@@ -1,0 +1,58 @@
+{
+    "length": {
+        "impact": 6.698269844055176,
+        "min_target": 12
+    },
+    "lowercase_count": {
+        "impact": 0.26069462299346924,
+        "min_target": 1
+    },
+    "uppercase_count": {
+        "impact": 0.036136068403720856,
+        "min_target": 1
+    },
+    "digit_count": {
+        "impact": 0.27449846267700195,
+        "min_target": 1
+    },
+    "special_count": {
+        "impact": 0.05038014426827431,
+        "min_target": 1
+    },
+    "entropy": {
+        "impact": 1.8311209678649902,
+        "min_target": 3.0
+    },
+    "transitions": {
+        "impact": 0.1059660091996193,
+        "min_target": 3.0
+    },
+    "max_repeat": {
+        "impact": 0.054294247180223465,
+        "min_target": 3.0
+    },
+    "leet_count": {
+        "impact": 0.06396809220314026,
+        "min_target": 1
+    },
+    "is_common_root": {
+        "impact": 0.014997309073805809,
+        "min_target": 3.0
+    },
+    "shape_complexity": {
+        "impact": 0.09602377563714981,
+        "min_target": 3.0
+    },
+    "pattern_intensity": {
+        "impact": 0.13667744398117065,
+        "min_target": 3.0
+    },
+    "habit_score": {
+        "impact": 0.07093054056167603,
+        "min_target": 3.0
+    },
+    "char_diversity": {
+        "impact": 0.10659033060073853,
+        "min_target": 3.0
+    }
+}
