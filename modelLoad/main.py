@@ -154,11 +154,18 @@ def extract_features(pwd):
 #
 # This ensures inference behavior is consistent with the evaluation metrics.
 
-def predict_strength(features_df):
+def predict_strength(features_df, pwd=""):
     if model is None:
         return 0, "Error (Model Missing)"
 
-    probs     = model.predict_proba(features_df)[0]
+    # Pre-model heuristic: letters only + length <= 8 -> force Weak
+    # Rationale: pure alphabetic short passwords have no digits or specials,
+    # are entirely covered by dictionary and brute-force attacks,
+    # and should be flagged regardless of what the model would predict.
+    if pwd and all(c.isalpha() for c in pwd) and len(pwd) <= 8:
+        return 0, STRENGTH_MAP[0]
+
+    probs = model.predict_proba(features_df)[0]
     # Security-adjusted threshold: err on the side of flagging weak passwords
     if probs[0] >= WEAK_THRESHOLD:
         score_index = 0
@@ -240,7 +247,8 @@ def analyze_password(request: PasswordRequest):
 
         else:
             # Model predicts with security-adjusted threshold
-            score_index, strength_label = predict_strength(features_df)
+            # pwd passed so letters-only heuristic can be applied pre-model
+            score_index, strength_label = predict_strength(features_df, pwd=pwd)
 
         # Recommendations only for non-Strong passwords
         if strength_label != "Strong":
@@ -248,7 +256,7 @@ def analyze_password(request: PasswordRequest):
                 features_df, email_warning=email_warning_triggered
             )
         else:
-            recs = ["Great password! Keep it safe and never reuse it."]
+            recs = ["The password is strong. No specific recommendations."]
 
         return {
             "password_length": len(pwd),

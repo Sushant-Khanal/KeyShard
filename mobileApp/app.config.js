@@ -1,5 +1,5 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 module.exports = {
   expo: {
     name: "KeyShard",
@@ -12,28 +12,26 @@ module.exports = {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      icon:{
-    light: "./assets/images/ios-light.png",
-    dark: "./assets/images/ios-dark.png",
-    tinted: "./assets/images/ios-tinted.png"
-
-      }
+      icon: {
+        light: "./assets/images/ios-light.png",
+        dark: "./assets/images/ios-dark.png",
+        tinted: "./assets/images/ios-tinted.png",
+      },
     },
     android: {
       adaptiveIcon: {
-       
         foregroundImage: "./assets/images/adaptive-icon.png",
         monochromeImage: "./assets/images/adaptive-icon.png",
-        backgroundColor:'#ffffff'
+        backgroundColor: "#ffffff",
       },
       package: "com.anonymous.mobileApp",
       edgeToEdgeEnabled: true,
-      predictiveBackGestureEnabled: false
+      predictiveBackGestureEnabled: false,
     },
     web: {
       output: "static",
       favicon: "./assets/images/favicon.png",
-      bundler: "metro"
+      bundler: "metro",
     },
     plugins: [
       "expo-secure-store",
@@ -48,23 +46,23 @@ module.exports = {
           resizeMode: "contain",
           backgroundColor: "#ffffff",
           dark: {
-            image:"./assets/images/splash-icon-dark.png",
-            backgroundColor: "#000000"
-          }
+            image: "./assets/images/splash-icon-dark.png",
+            backgroundColor: "#000000",
+          },
         },
-        
-      ]
+      ],
     ],
     experiments: {
       typedRoutes: true,
-      reactCompiler: false
+      reactCompiler: false,
     },
     extra: {
       ARGON_SALT: process.env.ARGON_SALT,
       localhost: process.env.IP,
-      "eas": {
-        "projectId": "538b2367-1cd7-4f53-a002-cefbee77322d"
-      }
-    }
-  }
+      passwordStrengthApi: process.env.PASSWORD_STRENGTH_API,
+      eas: {
+        projectId: "538b2367-1cd7-4f53-a002-cefbee77322d",
+      },
+    },
+  },
 };

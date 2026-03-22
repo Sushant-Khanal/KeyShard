@@ -417,7 +417,7 @@ const SignUp = () => {
                 </View>
 
                 {/* Password Strength - Now visible above keyboard */}
-                <PasswordStrength password={password} />
+                <PasswordStrength password={password} email={email} />
 
                 {error && (
                   <View className="mt-2 px-2">
