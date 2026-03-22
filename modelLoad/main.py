@@ -159,10 +159,10 @@ def predict_strength(features_df, pwd=""):
         return 0, "Error (Model Missing)"
 
     # Pre-model heuristic: letters only + length <= 8 -> force Weak
-    # Rationale: pure alphabetic short passwords have no digits or specials,
-    # are entirely covered by dictionary and brute-force attacks,
-    # and should be flagged regardless of what the model would predict.
-    if pwd and all(c.isalpha() for c in pwd) and len(pwd) <= 8:
+    # No digits or specials means zero character class diversity —
+    # vulnerable to dictionary attacks and name-based cracking regardless of length.
+    # e.g. 'nimeshpoudel', 'johncena', 'hello' all forced to Weak.
+    if pwd and all(c.isalpha() for c in pwd):
         return 0, STRENGTH_MAP[0]
 
     probs = model.predict_proba(features_df)[0]
