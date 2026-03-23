@@ -34,10 +34,10 @@ module.exports = {
       bundler: "metro",
     },
     plugins: [
+      "./plugins/withGradleConfig",
       "expo-secure-store",
       "expo-router",
       "expo-web-browser",
-      "onnxruntime-react-native",
       [
         "expo-splash-screen",
         {
