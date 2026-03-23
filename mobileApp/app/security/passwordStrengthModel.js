@@ -79,17 +79,20 @@ export async function analyzePasswordStrength(password, email) {
   const timeoutId = setTimeout(() => controller.abort(), 7000);
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://phytogeographically-fungic-leticia.ngrok-free.dev/analyze",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password,
+          email: email || undefined,
+        }),
+        signal: controller.signal,
       },
-      body: JSON.stringify({
-        password,
-        email: email || undefined,
-      }),
-      signal: controller.signal,
-    });
+    );
 
     if (!response.ok) {
       return {
