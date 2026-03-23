@@ -7,15 +7,6 @@ const fs = require("fs");
 const path = require("path");
 
 const withGradleVersion = (config) => {
-  // Patch android/build.gradle to pin AGP version
-  config = withProjectBuildGradle(config, (cfg) => {
-    cfg.modResults.contents = cfg.modResults.contents.replace(
-      /classpath\(['"]com\.android\.tools\.build:gradle['"]\)/,
-      "classpath('com.android.tools.build:gradle:8.5.2')",
-    );
-    return cfg;
-  });
-
   // Patch gradle-wrapper.properties to pin Gradle version
   config = withDangerousMod(config, [
     "android",
@@ -28,7 +19,7 @@ const withGradleVersion = (config) => {
         let contents = fs.readFileSync(wrapperPath, "utf8");
         contents = contents.replace(
           /distributionUrl=.+/,
-          "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.10.2-bin.zip",
+          "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.13-bin.zip",
         );
         fs.writeFileSync(wrapperPath, contents);
       }
