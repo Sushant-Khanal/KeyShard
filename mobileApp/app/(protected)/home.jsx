@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useEffect, useState } from 'react'
-import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet } from 'react-native'
+import React, { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'expo-router'
+import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Key, Lock, ShieldCheck, Search, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe, Copy } from 'lucide-react-native'
+import { Key, Lock, ShieldCheck, AlertTriangle, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe, Copy, X } from 'lucide-react-native'
 import * as Clipboard from 'expo-clipboard';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { getSession } from '../security/secureStore'
@@ -11,30 +12,58 @@ import { fromByteArray, toByteArray } from 'react-native-quick-base64'
 import Constants from 'expo-constants'
 import { ed } from '../security/signatureEd'
 import PasswordForm from '../components/PasswordForm'
-import Animated, { FadeInDown, FadeIn, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeOutUp } from 'react-native-reanimated';
 import Avatar from './Avatar'
 import Footer from './Footer'
 
 const Home = () => {
     const { localhost } = Constants.expoConfig?.extra ?? {}
+    const router = useRouter()
     const [fontsLoaded] = useFonts({
         Montserrat_400Regular,
         Montserrat_700Bold,
     })
 
-    const [search, setSearch] = useState('')
-    const [category, setCategory] = useState('All')
     const [password, setPassword] = useState([])
     const [visibleId, setVisibleId] = useState(null)
     const [openId, setOpenId] = useState(null)
     const [editingId, setEditingId] = useState(null)
     const [editValues, setEditValues] = useState({})
+    const [dismissedAlert, setDismissedAlert] = useState(false)
+    const [clipboardCountdown, setClipboardCountdown] = useState(null) // null = hidden, 0-30 = counting
+    const clipboardTimerRef = useRef(null)
+    const clipboardIntervalRef = useRef(null)
 
 
     function handleUpdatedPassword(data) {
         if (Array.isArray(data)) {
             setPassword(data)
         }
+    }
+
+    // ── Clipboard copy with 30s auto-clear countdown ────────────────────
+    const handleCopyPassword = async (value) => {
+        if (!value) return
+        await Clipboard.setStringAsync(String(value))
+
+        // Clear any existing timers
+        if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
+        if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
+
+        // Start countdown from 30
+        setClipboardCountdown(30)
+        let remaining = 30
+        clipboardIntervalRef.current = setInterval(() => {
+            remaining -= 1
+            setClipboardCountdown(remaining)
+            if (remaining <= 0) clearInterval(clipboardIntervalRef.current)
+        }, 1000)
+
+        // After 30s — wipe clipboard and hide toast
+        clipboardTimerRef.current = setTimeout(async () => {
+            await Clipboard.setStringAsync('')
+            setClipboardCountdown(null)
+        }, 30000)
     }
 
     const handleDelete = (itemId) => {
@@ -131,7 +160,7 @@ const Home = () => {
             const session = getSession()
             const updatedPasswords = password.map(p =>
                 p.id === itemId
-                    ? { ...p, ...editValues }
+                    ? { ...p, ...editValues, updatedAt: new Date().toISOString() }
                     : p
             )
 
@@ -206,8 +235,25 @@ const Home = () => {
 
     const passwordList = Array.isArray(password) ? password : []
 
-
-
+    // ── Fast client-side heuristics for home banner ─────────────────────────
+    function isWeakHeuristic(pwd) {
+        if (!pwd || pwd.length < 8) return true
+        const checks = [
+            /[A-Z]/.test(pwd),
+            /[a-z]/.test(pwd),
+            /[0-9]/.test(pwd),
+            /[^A-Za-z0-9]/.test(pwd),
+        ]
+        return checks.filter(Boolean).length < 3 || pwd.length < 10
+    }
+    const STALE_DAYS = 90
+    const weakCount = passwordList.filter(p => isWeakHeuristic(p.password)).length
+    const staleCount = passwordList.filter(p => {
+        const ref = p.updatedAt || p.createdAt
+        if (!ref) return false
+        return Math.floor((Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24)) >= STALE_DAYS
+    }).length
+    const showBanner = !dismissedAlert && passwordList.length > 0 && (weakCount > 0 || staleCount > 0)
 
     return (
         <LinearGradient
@@ -215,6 +261,11 @@ const Home = () => {
             style={styles.container}
         >
             <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                >
                 <Animated.View
                     entering={FadeIn.duration(800)}
                     style={styles.mainContent}
@@ -232,19 +283,48 @@ const Home = () => {
                         </Text>
                     </View>
 
-                    {/* SEARCH */}
-                    <View style={styles.searchContainer}>
-                        <View style={styles.searchBox}>
-                            <Search size={18} color="#666" />
-                            <TextInput
-                                placeholder="Search passwords..."
-                                placeholderTextColor="#555"
-                                style={styles.searchInput}
-                                value={search}
-                                onChangeText={setSearch}
-                            />
+                    {/* PASSWORD COUNT BADGE */}
+                    {passwordList.length > 0 && (
+                        <View style={styles.countBadge}>
+                            <Lock size={12} color="#2e85db" />
+                            <Text style={[styles.countBadgeText, { fontFamily: 'Montserrat_700Bold' }]}>
+                                {passwordList.length} password{passwordList.length !== 1 ? 's' : ''} stored
+                            </Text>
                         </View>
-                    </View>
+                    )}
+
+                    {/* SECURITY ALERT BANNER */}
+                    {showBanner && (
+                        <Animated.View
+                            entering={FadeInDown.duration(400)}
+                            style={styles.alertBanner}
+                        >
+                            <TouchableOpacity
+                                style={styles.alertContent}
+                                activeOpacity={0.8}
+                                onPress={() => router.push('/(protected)/Dashboard')}
+                            >
+                                <View style={styles.alertIcon}>
+                                    <AlertTriangle size={18} color="#f59e0b" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[styles.alertTitle, { fontFamily: 'Montserrat_700Bold' }]}>
+                                        Security Alert
+                                    </Text>
+                                    <Text style={[styles.alertBody, { fontFamily: 'Montserrat_400Regular' }]}>
+                                        {[weakCount > 0 && `${weakCount} weak password${weakCount > 1 ? 's' : ''}`, staleCount > 0 && `${staleCount} older than 90 days`].filter(Boolean).join(' · ')}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => setDismissedAlert(true)}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                    style={styles.alertClose}
+                                >
+                                    <X size={16} color="#f59e0b" />
+                                </TouchableOpacity>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    )}
 
                     {/* ADD PASSWORD FORM */}
                     <PasswordForm handleUpdatedPassword={handleUpdatedPassword} />
@@ -376,7 +456,7 @@ const Home = () => {
                                                             />
                                                         )}
                                                         <TouchableOpacity
-                                                            onPress={async () => { if (item.password) await Clipboard.setStringAsync(String(item.password)); }}
+                                                            onPress={() => handleCopyPassword(item.password)}
                                                             style={[styles.eyeButton, { right: 40, position: 'absolute', top: '50%', transform: [{ translateY: -10 }] }]}
                                                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                                         >
@@ -527,17 +607,14 @@ const Home = () => {
                                             </Animated.View>
                                         )}
 
-                                        {/* CREATED DATE */}
+                                        {/* DATE FOOTER */}
                                         <View style={styles.footer}>
                                             <Calendar size={14} color="#555" />
                                             <Text style={styles.footerText}>
-                                                {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
+                                                {item.updatedAt
+                                                    ? `Updated ${new Date(item.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                                                    : `Created ${new Date(item.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                                                }
                                             </Text>
                                         </View>
                                     </Animated.View>
@@ -564,6 +641,37 @@ const Home = () => {
                         </Text>
                     </View> */}
                 </Animated.View>
+                </KeyboardAvoidingView>
+
+                {/* CLIPBOARD COUNTDOWN TOAST */}
+                {clipboardCountdown !== null && (
+                    <Animated.View
+                        entering={FadeInDown.duration(300)}
+                        style={styles.clipboardToast}
+                    >
+                        <View style={styles.clipboardToastInner}>
+                            <Copy size={14} color="#f59e0b" />
+                            <Text style={[styles.clipboardToastText, { fontFamily: 'Montserrat_400Regular' }]}>
+                                Clipboard clears in{' '}
+                                <Text style={{ fontFamily: 'Montserrat_700Bold', color: clipboardCountdown <= 5 ? '#ef4444' : '#f59e0b' }}>
+                                    {clipboardCountdown}s
+                                </Text>
+                            </Text>
+                            <TouchableOpacity
+                                onPress={async () => {
+                                    if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
+                                    if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
+                                    await Clipboard.setStringAsync('')
+                                    setClipboardCountdown(null)
+                                }}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <X size={14} color="#888" />
+                            </TouchableOpacity>
+                        </View>
+                    </Animated.View>
+                )}
+
                 <Footer currentPage='home' />
             </SafeAreaView>
         </LinearGradient>
@@ -598,23 +706,13 @@ const styles = StyleSheet.create({
         marginTop: 6,
     },
     searchContainer: {
-        marginBottom: 20,
+        display: 'none',
     },
     searchBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#1a1a1a',
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: '#2a2a2a',
+        display: 'none',
     },
     searchInput: {
-        marginLeft: 10,
-        color: '#fff',
-        flex: 1,
-        fontSize: 16,
+        display: 'none',
     },
     scrollView: {
         flex: 1,
@@ -871,6 +969,88 @@ const styles = StyleSheet.create({
         color: '#555',
         fontSize: 12,
         marginLeft: 8,
+    },
+    alertBanner: {
+        backgroundColor: 'rgba(245,158,11,0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(245,158,11,0.25)',
+        borderRadius: 14,
+        marginBottom: 14,
+        overflow: 'hidden',
+    },
+    alertContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+    },
+    alertIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: 'rgba(245,158,11,0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    alertTitle: {
+        color: '#f59e0b',
+        fontSize: 13,
+        marginBottom: 2,
+    },
+    alertBody: {
+        color: '#d4a017',
+        fontSize: 12,
+        lineHeight: 16,
+    },
+    alertClose: {
+        padding: 4,
+    },
+    countBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        alignSelf: 'flex-end',
+        backgroundColor: 'rgba(46,133,219,0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(46,133,219,0.2)',
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 5,
+        marginTop: 8,
+        marginBottom: 14,
+    },
+    countBadgeText: {
+        color: '#2e85db',
+        fontSize: 12,
+    },
+    clipboardToast: {
+        position: 'absolute',
+        bottom: 80,
+        left: 20,
+        right: 20,
+        zIndex: 999,
+    },
+    clipboardToastInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: '#1a1a1a',
+        borderWidth: 1,
+        borderColor: 'rgba(245,158,11,0.35)',
+        borderRadius: 14,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    clipboardToastText: {
+        color: '#ccc',
+        fontSize: 13,
+        flex: 1,
     },
 })
 

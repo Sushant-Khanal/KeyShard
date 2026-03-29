@@ -4,6 +4,8 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -114,10 +116,15 @@ const Security = () => {
       className="flex-1"
     >
       <SafeAreaView className="flex-1 w-full" edges={["top", "bottom"]}>
-        <Animated.View
-          entering={FadeIn.duration(800)}
-          className="flex-1 w-[90%] mx-auto relative"
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
+          <Animated.View
+            entering={FadeIn.duration(800)}
+            className="flex-1 w-[90%] mx-auto relative"
+          >
           <Avatar />
 
           {/* HEADER */}
@@ -343,7 +350,8 @@ const Security = () => {
               </View>
             </Animated.View>
           </ScrollView>
-        </Animated.View>
+          </Animated.View>
+        </KeyboardAvoidingView>
         <Footer currentPage="security" />
       </SafeAreaView>
     </LinearGradient>

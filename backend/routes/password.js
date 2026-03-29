@@ -121,4 +121,57 @@ router.post('/newPassword',SignatureChecker(),async(req,res)=>{
 })
 
 
+router.post('/changeMasterPassword', SignatureChecker(), async (req, res) => {
+    try {
+        const { userHash, newUserHash, newSalt, newPublicKeyBase64, encryptedVault, tag, iv } = req.body;
+
+        if (!userHash || !newUserHash || !newSalt || !newPublicKeyBase64 || !encryptedVault || !tag || !iv) {
+            auditLog(EVENTS.VAULT_UPDATED, {
+                ip: req.ip,
+                metadata: { success: false, reason: 'missing_fields_for_master_password_change' }
+            });
+            return res.status(400).json({ error: true, message: "Missing required fields" });
+        }
+
+        const user = await User.updateOne({
+            userHash: userHash
+        },
+        {
+            $set: {
+                userHash: newUserHash,
+                salt: newSalt,
+                publicKeyBase64: newPublicKeyBase64,
+                iv: iv,
+                encryptedVault: encryptedVault,
+                tag: tag
+            }
+        });
+
+        if (user.matchedCount === 0) {
+            auditLog(EVENTS.VAULT_UPDATED, {
+                userHash: userHash,
+                ip: req.ip,
+                metadata: { success: false, reason: 'user_not_found' }
+            });
+            return res.status(404).json({ error: true, message: "Could not find the user" });
+        }
+
+        auditLog(EVENTS.VAULT_UPDATED, {
+            userHash: newUserHash,
+            ip: req.ip,
+            metadata: { success: true, action: 'master_password_changed' }
+        });
+
+        res.status(200).json({ error: false, message: "Master Password Updated Successfully" });
+
+    } catch (error) {
+        auditLog(EVENTS.SERVER_ERROR, {
+            ip: req.ip,
+            metadata: { route: '/changeMasterPassword', error: error.message }
+        });
+        return res.status(500).json({ error: true, message: "Internal Server Error" });
+    }
+});
+
+
 export default router

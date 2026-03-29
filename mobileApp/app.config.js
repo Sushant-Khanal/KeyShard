@@ -3,13 +3,13 @@ dotenv.config();
 module.exports = {
   expo: {
     name: "KeyShard",
-    slug: "keyshard",
+    slug: "mobileApp",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/adaptive-icon.png",
     scheme: "mobileapp",
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
+
     ios: {
       supportsTablet: true,
       icon: {
@@ -27,6 +27,9 @@ module.exports = {
       package: "com.anonymous.mobileApp",
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      newArchEnabled: true,
+      minSdkVersion: 26,
+      softwareKeyboardLayoutMode: "pan",
     },
     web: {
       output: "static",
@@ -61,7 +64,7 @@ module.exports = {
       localhost: process.env.IP,
       passwordStrengthApi: process.env.PASSWORD_STRENGTH_API,
       eas: {
-        projectId: "4c972e88-2f37-4613-a8c1-80fef1dd7fb2",
+        projectId: "538b2367-1cd7-4f53-a002-cefbee77322d",
       },
     },
   },
