@@ -4,7 +4,7 @@ import { analyzePasswordStrength } from "../security/passwordStrengthModel.js";
 
 const PasswordStrength = ({ password, email, onStrengthChange }) => {
   const [passwordStrength, setPasswordStrength] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -13,7 +13,7 @@ const PasswordStrength = ({ password, email, onStrengthChange }) => {
       if (password.length === 0) {
         if (!isMounted) return;
         setPasswordStrength("");
-        setFeedback("");
+        setFeedback([]);
         if (onStrengthChange) onStrengthChange(true);
         return;
       }
@@ -26,9 +26,9 @@ const PasswordStrength = ({ password, email, onStrengthChange }) => {
         analysis.strength !== "strong" &&
         analysis.recommendations.length > 0
       ) {
-        setFeedback(analysis.recommendations[0]);
+        setFeedback(analysis.recommendations.slice(0, 2));
       } else {
-        setFeedback("");
+        setFeedback([]);
       }
 
       if (onStrengthChange) {
@@ -69,16 +69,21 @@ const PasswordStrength = ({ password, email, onStrengthChange }) => {
         </View>
       )}
 
-      {feedback && password.length > 0 && passwordStrength !== "strong" && (
-        <View className="flex mt-4 w-full justify-center items-center">
-          <Text
-            style={{ fontFamily: "Montserrat_400Regular", fontSize: 12 }}
-            className="text-white mt-1 mr-auto font-medium"
-          >
-            💡 {feedback}
-          </Text>
-        </View>
-      )}
+      {feedback.length > 0 &&
+        password.length > 0 &&
+        passwordStrength !== "strong" && (
+          <View className="flex mt-4 w-full justify-center items-center">
+            {feedback.map((item, index) => (
+              <Text
+                key={`${item}-${index}`}
+                style={{ fontFamily: "Montserrat_400Regular", fontSize: 12 }}
+                className="text-white mt-1 mr-auto font-medium"
+              >
+                💡 {item}
+              </Text>
+            ))}
+          </View>
+        )}
     </View>
   );
 };

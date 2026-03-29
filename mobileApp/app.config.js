@@ -3,7 +3,7 @@ dotenv.config();
 module.exports = {
   expo: {
     name: "KeyShard",
-    slug: "mobileApp",
+    slug: "keyshard",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/adaptive-icon.png",
@@ -34,10 +34,10 @@ module.exports = {
       bundler: "metro",
     },
     plugins: [
+      "./plugins/withGradleConfig",
       "expo-secure-store",
       "expo-router",
       "expo-web-browser",
-      "onnxruntime-react-native",
       [
         "expo-splash-screen",
         {
@@ -61,7 +61,7 @@ module.exports = {
       localhost: process.env.IP,
       passwordStrengthApi: process.env.PASSWORD_STRENGTH_API,
       eas: {
-        projectId: "538b2367-1cd7-4f53-a002-cefbee77322d",
+        projectId: "4c972e88-2f37-4613-a8c1-80fef1dd7fb2",
       },
     },
   },

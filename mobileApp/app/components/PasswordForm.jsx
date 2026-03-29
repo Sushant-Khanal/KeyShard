@@ -100,7 +100,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
         encryptedVault,
         fromByteArray(session?.vaultKey),
         iv,
-        tag
+        tag,
       );
 
       if (!fetchedPassword) {
@@ -125,7 +125,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
     try {
       const encrypt = await encryptPassword(
         JSON.stringify(password),
-        fromByteArray(session?.vaultKey)
+        fromByteArray(session?.vaultKey),
       );
       if (!encrypt) {
         return setError("Failed to encrypt your vault");
@@ -367,69 +367,71 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
                     },
                   }}
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <View
-                      style={[
-                        styles.passwordContainer,
-                        {
-                          flexDirection: "row",
-                          alignItems: "center",
-                          position: "relative",
-                        },
-                      ]}
-                    >
-                      <TextInput
-                        secureTextEntry={passwordVisibility}
-                        style={[styles.input, { flex: 1, paddingRight: 90 }]}
-                        placeholder="Enter password"
-                        placeholderTextColor="#666"
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                      />
-                      <TouchableOpacity
-                        onPress={() => onChange(generatePassword())}
+                    <View>
+                      <View
                         style={[
-                          styles.eyeButton,
+                          styles.passwordContainer,
                           {
-                            position: "absolute",
-                            right: 60,
-                            top: "50%",
-                            marginTop: -16,
-                            backgroundColor: "white",
-                            borderRadius: 6,
-                            paddingVertical: 6,
-                            paddingHorizontal: 8,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            position: "relative",
                           },
                         ]}
                       >
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            color: "black",
-                            fontWeight: "bold",
-                          }}
+                        <TextInput
+                          secureTextEntry={passwordVisibility}
+                          style={[styles.input, { flex: 1, paddingRight: 90 }]}
+                          placeholder="Enter password"
+                          placeholderTextColor="#666"
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                        />
+                        <TouchableOpacity
+                          onPress={() => onChange(generatePassword())}
+                          style={[
+                            styles.eyeButton,
+                            {
+                              position: "absolute",
+                              right: 60,
+                              top: "50%",
+                              marginTop: -16,
+                              backgroundColor: "white",
+                              borderRadius: 6,
+                              paddingVertical: 6,
+                              paddingHorizontal: 8,
+                            },
+                          ]}
                         >
-                          Generate
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setPasswordVisibility((prev) => !prev)}
-                        style={[
-                          styles.eyeButton,
-                          {
-                            position: "absolute",
-                            right: 20,
-                            top: "50%",
-                            marginTop: -10,
-                          },
-                        ]}
-                      >
-                        {passwordVisibility ? (
-                          <Eye color="#888" size={20} />
-                        ) : (
-                          <EyeOff color="#888" size={20} />
-                        )}
-                      </TouchableOpacity>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: "black",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Generate
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => setPasswordVisibility((prev) => !prev)}
+                          style={[
+                            styles.eyeButton,
+                            {
+                              position: "absolute",
+                              right: 20,
+                              top: "50%",
+                              marginTop: -10,
+                            },
+                          ]}
+                        >
+                          {passwordVisibility ? (
+                            <Eye color="#888" size={20} />
+                          ) : (
+                            <EyeOff color="#888" size={20} />
+                          )}
+                        </TouchableOpacity>
+                      </View>
                       {errors.password && (
                         <Text style={styles.errorText}>
                           {errors.password.message}
