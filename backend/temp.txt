@@ -1,1 +1,0 @@
-mongodb://admin:admin@ac-drqbkkj-shard-00-00.kfh4oga.mongodb.net:27017,ac-drqbkkj-shard-00-01.kfh4oga.mongodb.net:27017,ac-drqbkkj-shard-00-02.kfh4oga.mongodb.net:27017/?authSource=admin&replicaSet=atlas-q5kybu-shard-0
