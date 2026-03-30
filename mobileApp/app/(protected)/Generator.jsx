@@ -57,10 +57,12 @@ const Generator = () => {
                     <Avatar />
 
                     {/* HEADER */}
-                    <View className="mb-6 mt-2">
+                    <View className="mb-6 mt-2" style={{ paddingRight: 70 }}>
                         <Text
                             style={{ fontFamily: 'Montserrat_700Bold' }}
                             className="text-white text-3xl tracking-tight"
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
                         >
                             Generate Password
                         </Text>

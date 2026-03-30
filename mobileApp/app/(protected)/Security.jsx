@@ -15,7 +15,7 @@ import {
   Montserrat_400Regular,
   Montserrat_700Bold,
 } from "@expo-google-fonts/montserrat";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import {
   Eye,
   EyeOff,
@@ -40,6 +40,12 @@ const Security = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [strengthLevel, setStrengthLevel] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Animated strength bar
+  const barWidth = useSharedValue(0);
+  const animatedBar = useAnimatedStyle(() => ({
+    width: `${barWidth.value}%`,
+  }));
 
   useEffect(() => {
     let isMounted = true;
@@ -85,15 +91,20 @@ const Security = () => {
   const getStrengthProgress = () => {
     switch (strengthLevel) {
       case "strong":
-        return "100%";
+        return 100;
       case "medium":
-        return "50%";
+        return 50;
       case "weak":
-        return "25%";
+        return 25;
       default:
-        return "0%";
+        return 0;
     }
   };
+
+  // Drive animation whenever strengthLevel changes
+  useEffect(() => {
+    barWidth.value = withTiming(getStrengthProgress(), { duration: 500 });
+  }, [strengthLevel]);
 
   const getStrengthIcon = () => {
     switch (strengthLevel) {
@@ -128,10 +139,13 @@ const Security = () => {
           <Avatar />
 
           {/* HEADER */}
-          <View className="mb-6 mt-2">
+          <View className="mb-6 mt-2" style={{ paddingRight: 70 }}>
             <Text
               style={{ fontFamily: "Montserrat_700Bold" }}
-              className="text-white text-3xl tracking-tight"
+              className="text-white text-2xl tracking-tight"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
             >
               Password Strength
             </Text>
@@ -199,10 +213,10 @@ const Security = () => {
                   <View className="h-2 bg-[#2a2a2a] rounded-full">
                     <Animated.View
                       className="h-full rounded-full"
-                      style={{
-                        width: getStrengthProgress(),
-                        backgroundColor: getStrengthColor(),
-                      }}
+                      style={[
+                        animatedBar,
+                        { backgroundColor: getStrengthColor() },
+                      ]}
                     />
                   </View>
 

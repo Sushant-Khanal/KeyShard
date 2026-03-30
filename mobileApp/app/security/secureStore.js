@@ -10,7 +10,8 @@ const session= {
     salt:null,
     tag:null,
     userHash:null,
-    privateKey:null
+    privateKey:null,
+    email:null
 }
 
 
@@ -21,6 +22,7 @@ export function setSession(data) {
   session.tag = data.tag
   session.userHash= data.userHash
   session.privateKey= data.privateKey
+  session.email= data.email ?? null
 }
 
 export function getSession() {
@@ -32,12 +34,12 @@ export function getSession() {
 export function clearSession(){
     if (session.vaultKey instanceof Uint8Array) session.vaultKey.fill(0)
     if (session.privateKey instanceof Uint8Array) session.privateKey.fill(0)
-    session.vaultKey= null,
-    session.salt= null,
-    session.iv= null,
-    session.tag= null,
+    session.vaultKey= null
+    session.salt= null
+    session.iv= null
+    session.tag= null
     session.userHash=null
- 
+    session.email=null
 }
 
 

@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import React from 'react'
 import { House, RotateCcwKey, ShieldCheck, BarChart3 } from 'lucide-react-native'
 import { navigate } from 'expo-router/build/global-state/routing'
-import { useFonts, Montserrat_400Regular } from '@expo-google-fonts/montserrat'
+import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 
 const TABS = [
     { key: 'home', label: 'Home', icon: House, route: './home' },
@@ -12,7 +12,9 @@ const TABS = [
 ]
 
 const Footer = ({ currentPage }) => {
-    const [fontsLoaded] = useFonts({ Montserrat_400Regular })
+    const [fontsLoaded] = useFonts({ Montserrat_400Regular, Montserrat_700Bold })
+
+    if (!fontsLoaded) return null
 
     return (
         <View style={styles.container}>
@@ -24,19 +26,24 @@ const Footer = ({ currentPage }) => {
                             key={key}
                             onPress={() => navigate(route)}
                             style={styles.tab}
+                            activeOpacity={0.7}
                         >
-                            <Icon
-                                size={22}
-                                color={active ? '#2e85db' : '#888'}
-                                strokeWidth={active ? 2 : 1.5}
-                            />
+                            <View style={[styles.pill, active && styles.pillActive]}>
+                                <Icon
+                                    size={22}
+                                    color={active ? '#2e85db' : '#555'}
+                                    strokeWidth={active ? 2 : 1.5}
+                                />
+                            </View>
                             <Text style={[
                                 styles.label,
-                                { color: active ? '#2e85db' : '#888' }
+                                { 
+                                    color: active ? '#2e85db' : '#555',
+                                    fontFamily: active ? 'Montserrat_700Bold' : 'Montserrat_400Regular',
+                                }
                             ]}>
                                 {label}
                             </Text>
-                            {active && <View style={styles.activeDot} />}
                         </TouchableOpacity>
                     )
                 })}
@@ -51,33 +58,34 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(10,10,10,0.97)',
         borderTopWidth: 1,
         borderTopColor: '#2a2a2a',
-        paddingBottom: 4,
+        paddingBottom: 6,
     },
     row: {
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 8,
+        paddingTop: 8,
+        paddingHorizontal: 4,
     },
     tab: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 4,
-        gap: 2,
+        gap: 4,
+    },
+    pill: {
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    pillActive: {
+        backgroundColor: 'rgba(46,133,219,0.12)',
     },
     label: {
         fontSize: 10,
-        fontFamily: 'Montserrat_400Regular',
-        marginTop: 2,
-    },
-    activeDot: {
-        width: 4,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: '#2e85db',
-        marginTop: 2,
+        marginTop: 0,
     },
 })
 

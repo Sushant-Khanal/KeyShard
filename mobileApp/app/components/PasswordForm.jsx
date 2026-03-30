@@ -39,7 +39,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const PasswordForm = ({ handleUpdatedPassword }) => {
+const PasswordForm = ({ handleUpdatedPassword, currentPasswords }) => {
   const { localhost } = Constants.expoConfig?.extra ?? {};
   const [tab, setTab] = useState(false);
   const [passwordVisibility, setPasswordVisibility] = useState(true);
@@ -113,6 +113,15 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
     }
   }
 
+  // Keep the local password state in sync with the parent's authoritative list.
+  // This prevents the stale-closure bug where PasswordForm's own copy diverges
+  // after a delete/edit performed in home.jsx.
+  useEffect(() => {
+    if (Array.isArray(currentPasswords)) {
+      setPassword(currentPasswords);
+    }
+  }, [currentPasswords]);
+
   useEffect(() => {
     handleVaultFetch();
   }, []);
@@ -139,6 +148,7 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
         userHash: session?.userHash,
         salt: session?.salt,
         privateKey: session?.privateKey,
+        email: session?.email,
       });
 
       const { userHash } = getSession();
@@ -202,18 +212,16 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
   const onSubmit = (data) => {
     setTab(false);
 
-    setPassword((prev) => {
-      const updatedVault = [
-        ...prev,
-        {
-          ...data,
-          id: Date.now().toString() + Math.random().toString(36),
-          createdAt: new Date().toISOString(),
-        },
-      ];
-
-      return updatedVault;
-    });
+    // Always build on the parent's authoritative list (currentPasswords) so that
+    // any deletes / edits performed in home.jsx are reflected here before we append.
+    const base = Array.isArray(currentPasswords) ? currentPasswords : password;
+    const newEntry = {
+      ...data,
+      id: Date.now().toString() + Math.random().toString(36),
+      createdAt: new Date().toISOString(),
+    };
+    const updatedVault = [...base, newEntry];
+    setPassword(updatedVault);
 
     reset();
   };
@@ -511,31 +519,6 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               </View>
             </View>
 
-            {/* ========== TIMESTAMP SECTION ========== */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionHeader}>
-                <Clock color="#ffffff" size={20} />
-                <Text style={styles.sectionTitle}>Timestamp</Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Created At Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Created At</Text>
-                <Controller
-                  control={control}
-                  name="createdAt"
-                  render={({ field: { value } }) => (
-                    <View style={styles.timestampBox}>
-                      <Text style={styles.timestampText}>
-                        {new Date(value).toLocaleString()}
-                      </Text>
-                    </View>
-                  )}
-                />
-              </View>
-            </View>
 
             {/* ========== RECOVERY SECTION ========== */}
             <View style={styles.sectionCard}>
@@ -676,7 +659,19 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => reset()}
+                onPress={() => reset({
+                  id: Date.now().toString() + Math.random().toString(36),
+                  title: "",
+                  username: "",
+                  password: "",
+                  url: "",
+                  category: "Other",
+                  notes: "",
+                  tags: "",
+                  recoveryEmail: "",
+                  recoveryPhone: "",
+                  createdAt: new Date().toISOString(),
+                })}
                 style={styles.secondaryButton}
               >
                 <Text style={styles.secondaryButtonText}>Reset Form</Text>
@@ -687,15 +682,22 @@ const PasswordForm = ({ handleUpdatedPassword }) => {
       </LinearGradient>
     </Modal>
   ) : (
-    <TouchableOpacity onPress={() => setTab(true)} style={styles.addButton}>
-      <LinearGradient
-        colors={["#ffffff", "#f0f0f0"]}
-        style={styles.addButtonGradient}
-      >
-        <Plus color="#000" size={20} />
-        <Text style={styles.addButtonText}>Add New Password</Text>
-      </LinearGradient>
-    </TouchableOpacity>
+    <View>
+      <TouchableOpacity onPress={() => { setTab(true); setSuccess(''); }} style={styles.addButton}>
+        <LinearGradient
+          colors={["#ffffff", "#f0f0f0"]}
+          style={styles.addButtonGradient}
+        >
+          <Plus color="#000" size={20} />
+          <Text style={styles.addButtonText}>Add New Password</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      {success ? (
+        <View style={styles.successToast}>
+          <Text style={styles.successToastText}>✓ Password saved successfully</Text>
+        </View>
+      ) : null}
+    </View>
   );
 };
 
@@ -885,6 +887,21 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "700",
+  },
+  successToast: {
+    marginTop: 10,
+    backgroundColor: "rgba(34,197,94,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(34,197,94,0.3)",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  successToastText: {
+    color: "#22c55e",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
 

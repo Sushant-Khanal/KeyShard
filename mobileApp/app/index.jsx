@@ -142,7 +142,7 @@ const Login = () => {
       }
 
       setStatus("Success, Loading your vault...");
-      setSession({ vaultKey, iv, tag, salt, userHash, privateKey });
+      setSession({ vaultKey, iv, tag, salt, userHash, privateKey, email });
 
       setTimeout(() => {
         const session = getSession();

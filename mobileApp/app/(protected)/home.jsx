@@ -53,17 +53,24 @@ const Home = () => {
         // Start countdown from 30
         setClipboardCountdown(30)
         let remaining = 30
-        clipboardIntervalRef.current = setInterval(() => {
+        clipboardIntervalRef.current = setInterval(async () => {
             remaining -= 1
-            setClipboardCountdown(remaining)
-            if (remaining <= 0) clearInterval(clipboardIntervalRef.current)
+            if (remaining <= 0) {
+                clearInterval(clipboardIntervalRef.current)
+                if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
+                await Clipboard.setStringAsync('')
+                setClipboardCountdown(null)   // hide toast immediately at 0
+            } else {
+                setClipboardCountdown(remaining)
+            }
         }, 1000)
 
-        // After 30s — wipe clipboard and hide toast
+        // Safety net: force-clear after 31s in case interval drifts
         clipboardTimerRef.current = setTimeout(async () => {
+            if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
             await Clipboard.setStringAsync('')
             setClipboardCountdown(null)
-        }, 30000)
+        }, 31000)
     }
 
     const handleDelete = (itemId) => {
@@ -143,6 +150,7 @@ const Home = () => {
 
     const handleEditStart = (item) => {
         setEditingId(item.id)
+        setOpenId(item.id)          // auto-expand so all edit fields are visible
         setEditValues({
             password: item.password,
             username: item.username,
@@ -275,7 +283,7 @@ const Home = () => {
                     <Avatar />
                     {/* HEADER */}
                     <View style={styles.header}>
-                        <Text style={[styles.headerTitle, { fontFamily: 'Montserrat_700Bold' }]}>
+                        <Text style={[styles.headerTitle, { fontFamily: 'Montserrat_700Bold' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
                             Password Vault
                         </Text>
                         <Text style={[styles.headerSubtitle, { fontFamily: 'Montserrat_400Regular' }]}>
@@ -327,7 +335,7 @@ const Home = () => {
                     )}
 
                     {/* ADD PASSWORD FORM */}
-                    <PasswordForm handleUpdatedPassword={handleUpdatedPassword} />
+                    <PasswordForm handleUpdatedPassword={handleUpdatedPassword} currentPasswords={password} />
 
                     {/* PASSWORD LIST */}
                     <ScrollView
@@ -404,9 +412,20 @@ const Home = () => {
                                                     placeholderTextColor="#555"
                                                 />
                                             ) : (
-                                                <View style={styles.fieldContent}>
-                                                    <Text style={styles.fieldLabel}>Username</Text>
-                                                    <Text style={styles.fieldValue}>{item.username || 'N/A'}</Text>
+                                                <View style={[styles.fieldContent, { flexDirection: 'row', alignItems: 'center' }]}>
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={styles.fieldLabel}>Username</Text>
+                                                        <Text style={styles.fieldValue}>{item.username || 'N/A'}</Text>
+                                                    </View>
+                                                    {item.username ? (
+                                                        <TouchableOpacity
+                                                            onPress={() => handleCopyPassword(item.username)}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                            style={{ padding: 6 }}
+                                                        >
+                                                            <Copy size={16} color="#555" />
+                                                        </TouchableOpacity>
+                                                    ) : null}
                                                 </View>
                                             )}
                                         </View>
@@ -694,11 +713,12 @@ const styles = StyleSheet.create({
     header: {
         marginBottom: 24,
         marginTop: 10,
+        paddingRight: 70,
     },
     headerTitle: {
-        fontSize: 30,
+        fontSize: 24,
         color: '#ffffff',
-        letterSpacing: -1,
+        letterSpacing: -0.5,
     },
     headerSubtitle: {
         fontSize: 14,

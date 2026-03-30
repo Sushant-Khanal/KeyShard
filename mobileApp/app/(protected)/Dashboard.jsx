@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import {
     View, Text, ScrollView, StyleSheet,
-    TouchableOpacity, RefreshControl,
+    TouchableOpacity, RefreshControl, ActivityIndicator,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -132,9 +132,9 @@ const Dashboard = () => {
     const total = passwords.length
     const rawScore = total === 0 ? 100
         : Math.max(0, Math.round(
-            (strongList.length / total) * 60 +
-            (mediumList.length / total) * 30 -
-            (weakList.length / total) * 40 -
+            (strongList.length / total) * 100 -
+            (mediumList.length / total) * 20 -
+            (weakList.length / total) * 60 -
             (staleList.length / total) * 20 -
             (duplicateCount / total) * 15
         ))
@@ -154,7 +154,7 @@ const Dashboard = () => {
 
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={[styles.title, { fontFamily: 'Montserrat_700Bold' }]}>Security Dashboard</Text>
+                        <Text style={[styles.title, { fontFamily: 'Montserrat_700Bold' }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>Security Dashboard</Text>
                         <Text style={[styles.subtitle, { fontFamily: 'Montserrat_400Regular' }]}>
                             Your vault security at a glance
                         </Text>
@@ -189,6 +189,14 @@ const Dashboard = () => {
                                 <Text style={[styles.scoreDesc, { fontFamily: 'Montserrat_400Regular' }]}>
                                     {total} password{total !== 1 ? 's' : ''} in vault
                                 </Text>
+                                {!analysisReady && total > 0 && (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                                        <ActivityIndicator size="small" color="#2e85db" />
+                                        <Text style={[styles.scoreDesc, { fontFamily: 'Montserrat_400Regular', color: '#2e85db' }]}>
+                                            Running analysis…
+                                        </Text>
+                                    </View>
+                                )}
                                 {analysisReady && (
                                     <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
                                         <RefreshCw size={13} color="#2e85db" />
@@ -278,7 +286,7 @@ const Dashboard = () => {
                                         <IssueRow
                                             key={item.id}
                                             title={item.title || 'Untitled'}
-                                            detail={`${daysSince(item.createdAt)} days since created`}
+                                            detail={`${daysSince(item.updatedAt || item.createdAt)} days since last updated`}
                                             accentColor="#a78bfa"
                                             icon={<Clock size={16} color="#a78bfa" />}
                                             last={i === staleList.length - 1}
@@ -377,8 +385,8 @@ function IssueRow({ title, detail, accentColor, icon, last }) {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-    header: { marginTop: 10, marginBottom: 4 },
-    title: { fontSize: 28, color: '#fff', letterSpacing: -0.5 },
+    header: { marginTop: 10, marginBottom: 4, paddingRight: 70 },
+    title: { fontSize: 24, color: '#fff', letterSpacing: -0.5 },
     subtitle: { fontSize: 13, color: '#888', marginTop: 4 },
 
     scoreCard: {

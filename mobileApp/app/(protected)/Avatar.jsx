@@ -1,19 +1,27 @@
-import { TouchableOpacity, View, Text, Modal, Pressable } from 'react-native'
+import { TouchableOpacity, View, Text, Modal, Pressable, StatusBar, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { getSession, clearSession } from '../security/secureStore'
 import { SvgUri } from 'react-native-svg'
-import { LogOut, Key, QrCode } from 'lucide-react-native'
+import { LogOut, Key, QrCode, User } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
 
 const Avatar = () => {
     const [userHash, setUserHash] = useState('')
+    const [email, setEmail] = useState('')
     const [active, setActive] = useState(false)
     const router = useRouter()
+
+    // Compute dropdown top offset based on platform status bar
+    const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 44
+    const dropdownTop = statusBarHeight + 62
 
     useEffect(() => {
         const session = getSession()
         if (session?.userHash) {
             setUserHash(session.userHash)
+        }
+        if (session?.email) {
+            setEmail(session.email)
         }
     }, [])
 
@@ -29,6 +37,7 @@ const Avatar = () => {
         <View style={{ position: 'absolute', top: 8, right: 8, zIndex: 50 }}>
             <TouchableOpacity
                 onPress={() => setActive(true)}
+                activeOpacity={0.8}
                 style={{
                     padding: 4,
                     backgroundColor: 'white',
@@ -58,13 +67,13 @@ const Avatar = () => {
                     <View
                         style={{
                             position: 'absolute',
-                            top: 70,
+                            top: dropdownTop,
                             right: 16,
                             backgroundColor: '#1a1a1a',
                             borderWidth: 1,
                             borderColor: '#333',
                             borderRadius: 14,
-                            minWidth: 200,
+                            minWidth: 220,
                             shadowColor: '#000',
                             shadowOffset: { width: 0, height: 8 },
                             shadowOpacity: 0.5,
@@ -73,7 +82,45 @@ const Avatar = () => {
                             overflow: 'hidden',
                         }}
                     >
+                        {/* Account identifier row */}
+                        <View
+                            style={{
+                                paddingHorizontal: 18,
+                                paddingVertical: 14,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 12,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#2a2a2a',
+                                backgroundColor: '#111',
+                            }}
+                        >
+                            <View style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 16,
+                                backgroundColor: 'rgba(46,133,219,0.15)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <User size={16} color="#2e85db" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#555', fontSize: 10, fontWeight: '600', letterSpacing: 0.5, marginBottom: 2 }}>
+                                    SIGNED IN AS
+                                </Text>
+                                <Text
+                                    style={{ color: '#ccc', fontSize: 13, fontWeight: '500' }}
+                                    numberOfLines={1}
+                                    ellipsizeMode="middle"
+                                >
+                                    {email || userHash.substring(0, 12) + '…'}
+                                </Text>
+                            </View>
+                        </View>
+
                         <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={() => {
                                 setActive(false);
                                 setTimeout(() => router.push('/(protected)/ChangeMasterPassword'), 150);
@@ -93,6 +140,7 @@ const Avatar = () => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={() => {
                                 setActive(false);
                                 setTimeout(() => router.push('/(protected)/QRBackup'), 150);
@@ -112,6 +160,7 @@ const Avatar = () => {
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={handleLogout}
                             style={{
                                 paddingHorizontal: 18,

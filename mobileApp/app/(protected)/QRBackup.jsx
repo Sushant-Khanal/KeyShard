@@ -88,7 +88,7 @@ const QRBackup = () => {
                         <View style={styles.inner}>
                             {/* Back Button */}
                             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                                <ArrowLeft color="white" size={24} />
+                                <ArrowLeft color="white" size={22} />
                             </TouchableOpacity>
 
                             {/* Header */}
@@ -225,9 +225,13 @@ const styles = StyleSheet.create({
         paddingTop: 16,
     },
     backBtn: {
-        padding: 8,
+        padding: 10,
         alignSelf: 'flex-start',
         marginBottom: 8,
+        backgroundColor: '#1a1a1a',
+        borderWidth: 1,
+        borderColor: '#2a2a2a',
+        borderRadius: 12,
     },
     header: {
         alignItems: 'center',
