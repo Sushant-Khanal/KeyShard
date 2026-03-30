@@ -187,8 +187,10 @@ const ChangeMasterPassword = () => {
 
       // Step 8: Success
       setSuccess(true);
-      
-      // Update local session to use new keys so app keeps working
+
+      // Update local session to use new keys so app keeps working.
+      // Preserve the existing email so the Avatar keeps displaying it correctly
+      // instead of falling back to the userHash substring.
       setSession({
         vaultKey: newVaultKey,
         iv: newIv,
@@ -196,6 +198,7 @@ const ChangeMasterPassword = () => {
         salt: newSalt,
         userHash: newUserHash,
         privateKey: newPrivateKey,
+        email: session.email,   // carry email forward — it hasn't changed
       });
 
       setTimeout(() => {

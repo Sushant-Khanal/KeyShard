@@ -695,6 +695,12 @@ const PasswordForm = ({ handleUpdatedPassword, currentPasswords }) => {
       {success ? (
         <View style={styles.successToast}>
           <Text style={styles.successToastText}>✓ Password saved successfully</Text>
+          <TouchableOpacity
+            onPress={() => setSuccess('')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <X size={15} color="#22c55e" />
+          </TouchableOpacity>
         </View>
       ) : null}
     </View>
@@ -896,12 +902,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 16,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   successToastText: {
     color: "#22c55e",
     fontSize: 13,
     fontWeight: "600",
+    flex: 1,
   },
 });
 

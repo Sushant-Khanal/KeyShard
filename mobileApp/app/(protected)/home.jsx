@@ -5,6 +5,7 @@ import { Text, Image, View, TouchableOpacity, ScrollView, TextInput, Alert, Styl
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Key, Lock, ShieldCheck, AlertTriangle, Eye, EyeOff, Mail, Phone, Calendar, Tag, ChevronDown, ChevronUp, Trash2, Edit2, Globe, Copy, X } from 'lucide-react-native'
 import * as Clipboard from 'expo-clipboard';
+import BackgroundTimer from 'react-native-background-timer';
 import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat'
 import { getSession } from '../security/secureStore'
 import { encryptPassword } from '../security/aesEncryption'
@@ -42,22 +43,23 @@ const Home = () => {
     }
 
     // ── Clipboard copy with 30s auto-clear countdown ────────────────────
+    // Uses BackgroundTimer so timers keep firing even when the app is backgrounded
     const handleCopyPassword = async (value) => {
         if (!value) return
         await Clipboard.setStringAsync(String(value))
 
         // Clear any existing timers
-        if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
-        if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
+        if (clipboardTimerRef.current) BackgroundTimer.clearTimeout(clipboardTimerRef.current)
+        if (clipboardIntervalRef.current) BackgroundTimer.clearInterval(clipboardIntervalRef.current)
 
         // Start countdown from 30
         setClipboardCountdown(30)
         let remaining = 30
-        clipboardIntervalRef.current = setInterval(async () => {
+        clipboardIntervalRef.current = BackgroundTimer.setInterval(async () => {
             remaining -= 1
             if (remaining <= 0) {
-                clearInterval(clipboardIntervalRef.current)
-                if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
+                BackgroundTimer.clearInterval(clipboardIntervalRef.current)
+                if (clipboardTimerRef.current) BackgroundTimer.clearTimeout(clipboardTimerRef.current)
                 await Clipboard.setStringAsync('')
                 setClipboardCountdown(null)   // hide toast immediately at 0
             } else {
@@ -66,8 +68,8 @@ const Home = () => {
         }, 1000)
 
         // Safety net: force-clear after 31s in case interval drifts
-        clipboardTimerRef.current = setTimeout(async () => {
-            if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
+        clipboardTimerRef.current = BackgroundTimer.setTimeout(async () => {
+            if (clipboardIntervalRef.current) BackgroundTimer.clearInterval(clipboardIntervalRef.current)
             await Clipboard.setStringAsync('')
             setClipboardCountdown(null)
         }, 31000)
@@ -678,8 +680,8 @@ const Home = () => {
                             </Text>
                             <TouchableOpacity
                                 onPress={async () => {
-                                    if (clipboardTimerRef.current) clearTimeout(clipboardTimerRef.current)
-                                    if (clipboardIntervalRef.current) clearInterval(clipboardIntervalRef.current)
+                                    if (clipboardTimerRef.current) BackgroundTimer.clearTimeout(clipboardTimerRef.current)
+                                    if (clipboardIntervalRef.current) BackgroundTimer.clearInterval(clipboardIntervalRef.current)
                                     await Clipboard.setStringAsync('')
                                     setClipboardCountdown(null)
                                 }}
