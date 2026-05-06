@@ -76,9 +76,9 @@ Most password managers are centralized, closed-source, and trust the provider to
 
 ![Flowchart](docs/Images/flowchart.drawio.png)
 
-### ML Model Architecture
+### Process Model Architecture
 
-![ML Model](docs/Images/model.png)
+![Process Model](docs/Images/model.png)
 
 ---
 
