@@ -1,154 +1,334 @@
-# KeyShards
+<div align="center">
+  <img src="mobileApp/assets/images/KeyShard.png" alt="KeyShard Logo" width="120" />
+  <h1>KeyShard</h1>
+  <p><strong>A zero-knowledge, distributed password manager built for security and resilience.</strong></p>
 
-  ## User Flow
-  
-  ### Signup Flow
-  
-  ![SignUp Flow](/mobileApp/assets/images/signupflow.png)
-  
-  ### Login Flow
-  
-  ![Login Flow](/mobileApp/assets/images/loginflow.png)
-
-# Gallery
- ## SignIn Page Mobile
-![Sign In Page](/mobileApp/assets/images/SigninPage.jpg)
-
-## Sign Up Page Mobile
-![Sign Up Page](/mobileApp/assets/images/SignUp.jpg)
-
-## Home Page Mobile
-![Home Page](/mobileApp/assets/images/Home.jpg)
-
-## Argon2 Output
-![Argon2 Output](/mobileApp/assets/images/Argon2Output.png)
-
-## Password Detail Form (React Hook Form)
-![Pass Form](/mobileApp/assets/images/passwordform.jpg)
-
-## AES GSM (Password Vault Output)
-![Output](/mobileApp/assets/images/Aesoutput.png)
-
-
-# KeyShards FrontEnd Workflow
-
-## User Identification
-- Each user needs a **unique identifier** such as an **email** or **username**.
-- This identifier is used to **look up the user’s encrypted vault** in the database.
-- The user **does not need to know the UUID**; it is only used internally as a salt for key derivation.
-
-## Argon2 Key Generation
-- We use the **`argon2id`** function from the **`@noble/hashes/argon2`** library to generate a **256-bit master key** from the user’s master password.
-- The **UUID generated at account creation** serves as the salt for Argon2.
-- This master key **never leaves the device** and is **never stored in the database**.
-
-## Argon2 Output
-![Argon2 Output](/mobileApp/assets/images/Argon2Output.png)
-
-## Vault Encryption
-- The **entire vault** (all stored passwords) is encrypted using the **AES-GCM algorithm**.
-- The **argon2-derived master key** is used as the encryption key.
-- Each encryption uses a **unique IV (initialization vector)** to ensure ciphertext is unique even if the vault content is the same.
-
-## Account Creation
-1. User provides **email/username** and master password.
-2. Generate a **UUID**.
-   - Used as **salt for Argon2** and internally as a **unique database reference**.
-3. Derive the **master key** from the master password + UUID salt using Argon2.
-4. Encrypt the initial vault (can be empty) using AES-GCM with the derived master key.
-5. Store in the database:
-   - Email/username
-   - Vault ciphertext + IV
-   - UUID (salt)
-   - Argon2 parameters (for eg: memory usage, max memory, parallelism, iterations) NOTE: The master key is never stored in the DB
-
-## Adding a New Password Item in the Vault
-1. User enters **master password**.
-2. Derive the **master key** in memory using Argon2 + stored UUID salt. 
-
-(NOTE: Login / Session Start: Master password  not in memory → derive masterKey using Argon2 + stored salt → keep masterKey in memory for session. 
-       Already Logged In: masterKey is in memory → no need to derive again → use it to encrypt/decrypt vault entries.)
-
-3. Decrypt the existing vault using AES-GCM + derived key + IV.
-4. Update the vault JSON with the new password entry.
-5. Re-encrypt the vault (can use a new IV).
-6. Store the updated ciphertext and IV back in the database.
-
-> The master key exists **temporarily in memory** during this session and is cleared when the app is locked or closed.
-
-## Vault Retrieval / Unlocking
-1. User logs in with **email/username** and **master password**.
-2. Look up the vault in the database by **email/username**.
-3. Retrieve:
-   - Vault ciphertext + IV
-   - UUID (salt for Argon2)
-   - Argon2 parameters
-4. Derive the **master key** from master password + salt using Argon2.
-5. Decrypt the vault using AES-GCM + derived key + IV.
-6. Display the decrypted vault in the app.
-
-## Security Notes
-- The vault is **zero-knowledge**: the server never has access to the master password or AES key.
-- The AES key is **derived on-device** only.
-- Each vault encryption can use a **unique IV** for additional security.
-- The UUID ensures that even if two users choose the same master password, their keys are different.
-- Email/username serves as the **DB lookup key** and is not secret.
-
-
-
-
-
-
-
-# 📱 React Native Cheatsheet
-
-A quick reference guide comparing common **HTML elements** with their **React Native equivalents**, along with styling differences.
+  ![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)
+  ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js&logoColor=white)
+  ![React Native](https://img.shields.io/badge/React%20Native-Expo-61DAFB?logo=react&logoColor=white)
+  ![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb&logoColor=white)
+  ![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis&logoColor=white)
+  ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+  ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+</div>
 
 ---
 
-## 🧱 Structural Elements
+## 📖 Table of Contents
 
-| HTML Tag | React Native Component | Description |
-|---------|-------------------------|-------------|
-| `<div>` | `<View>` | The most fundamental building block for layout and styling. |
-| `<span>` | `<Text>` | Used for displaying inline or small text content. |
-| `<p>` | `<Text>` | Paragraph-like text, handled by styling. |
-| `<h1>` – `<h6>` | `<Text>` | Headings are created by applying font sizes and weights using styles. |
-
----
-
-## 🧩 Content Elements
-
-| HTML Tag | React Native Component | Description |
-|---------|-------------------------|-------------|
-| `<img>` | `<Image>` | Displays images. Uses `source` prop with `require()` (local) or `{ uri: "" }` (remote). |
-| `<input type="text">` | `<TextInput>` | Standard single-line text input. |
-| `<textarea>` | `<TextInput multiline />` | Multi-line text input. |
-| `<button>` | `<Button>`, `<TouchableOpacity>`, `<Pressable>` | `<Button>` is basic; others offer customization and animations. |
-| `<a>` | `<Text>` + `Linking` API | Use `<Text onPress>` with `Linking.openURL()` for links. |
-| `<ul>`, `<ol>`, `<li>` | `<View>` + `<Text>` | Lists are created by mapping over data and rendering components. |
+- [What is KeyShard?](#-what-is-keyshard)
+- [What Problem Does It Solve?](#-what-problem-does-it-solve)
+- [Architecture](#-architecture)
+- [System Design](#-system-design)
+- [Security Model](#-security-model)
+- [Tech Stack](#-tech-stack)
+- [Requirements](#-requirements)
+- [Getting Started](#-getting-started)
+  - [1. Distributed Storage Nodes (Go)](#1-distributed-storage-nodes-go)
+  - [2. Backend API (Node.js)](#2-backend-api-nodejs)
+  - [3. Mobile App (React Native / Expo)](#3-mobile-app-react-native--expo)
+  - [4. ML Password Strength Model (Python)](#4-ml-password-strength-model-python)
+- [User Flows](#-user-flows)
+- [App Screenshots](#-app-screenshots)
+- [Environment Variables](#-environment-variables)
+- [Contributing](#-contributing)
 
 ---
 
-## 🎨 Styling
+## 🔐 What is KeyShard?
 
-| HTML Concept | React Native Equivalent | Description |
-|--------------|-------------------------|-------------|
-| CSS Styles | `StyleSheet.create()` | React Native uses JS objects for defining styles. |
-| class / id | `style` prop | Styles applied directly using a style object or array. |
-| Flexbox | Flexbox in `style` | Layout uses Flexbox with properties like `flexDirection`, `justifyContent`, `alignItems`, etc. |
+**KeyShard** is a privacy-first, zero-knowledge password manager that combines:
 
-**Example style object:**
+- **Client-side encryption** using Argon2id + AES-GCM so your master key never leaves your device.
+- **Distributed storage** across a ring of Go-powered nodes using consistent hashing, ensuring no single point of failure.
+- **Machine-learning password strength analysis** to guide users toward truly secure passwords.
+- **A cross-platform mobile app** built with React Native / Expo for iOS and Android.
 
-```js
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-});
+Your passwords are encrypted on your device before they ever touch the network. The server stores only encrypted ciphertext — it has **zero knowledge** of your actual passwords or master key.
+
+---
+
+## ❓ What Problem Does It Solve?
+
+Most password managers are centralized, closed-source, and trust the provider to never peek at your data. KeyShard eliminates that trust assumption:
+
+| Problem | KeyShard's Solution |
+|---|---|
+| Central server compromise exposes all passwords | Vault data is AES-GCM encrypted before leaving the device |
+| Single node failure takes the service down | Consistent-hash ring of 5 nodes with automatic key redistribution |
+| Weak passwords accepted silently | On-device ML model (ONNX) rates password strength in real time |
+| Master key stored on server | Argon2id derives the key on-device; it is never transmitted or persisted |
+| Re-using IVs weakens AES security | A unique IV is generated per encryption operation |
+
+---
+
+## 🏗️ Architecture
+
+### System Block Diagram
+
+![System Block Diagram](docs/Images/system_block_diagram.png)
+
+### Class Diagram
+
+![Class Diagram](docs/Images/Class%20Diagram.drawio.png)
+
+### Application Flowchart
+
+![Flowchart](docs/Images/flowchart.drawio.png)
+
+### ML Model Architecture
+
+![ML Model](docs/Images/model.png)
+
+---
+
+## 📐 System Design
+
+### Data Flow — Level 0
+
+![DFD Level 0](docs/Images/DFD_0.png)
+
+### Data Flow — Level 1
+
+![DFD Level 1](docs/Images/DFD_1.png)
+
+### Sequence Diagram
+
+![Sequence Diagram](docs/Images/sequence.png)
+
+---
+
+## 🔒 Security Model
+
+KeyShard follows a **zero-knowledge architecture**:
+
+1. **Argon2id Key Derivation** — Your master password is never stored. A 256-bit AES key is derived on-device using Argon2id with your account UUID as a unique salt.
+
+   ![Argon2 Output](mobileApp/assets/images/Argon2Output.png)
+
+2. **AES-GCM Vault Encryption** — The entire password vault is encrypted with AES-GCM. A fresh IV is generated for every encryption, so repeated saves of the same vault produce different ciphertext.
+
+   ![AES-GCM Output](mobileApp/assets/images/Aesoutput.png)
+
+3. **On-device key lifetime** — The AES key lives only in memory during an active session. It is discarded when the app is locked or closed.
+
+4. **Distributed storage** — Vault shards are distributed across a consistent-hash ring of Go nodes. Rebalancing happens automatically when nodes join or leave, with no data loss.
+
+### Key lifecycle summary
+
+```
+Master Password + UUID (salt)
+        │
+        ▼  Argon2id (on device)
+   AES-256 Master Key  ──────────────────┐
+        │                                │
+        ▼                                ▼
+  Encrypt Vault (AES-GCM)         Decrypt Vault (AES-GCM)
+        │                                │
+        ▼                                ▼
+  [Ciphertext + IV]  ──► API ──►  [Ciphertext + IV]
+     (stored in DB)                (returned from DB)
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Mobile App | React Native, Expo, NativeWind (Tailwind), Expo Router |
+| Client Crypto | `@noble/hashes` (Argon2id), `react-native-aes-gcm-crypto` |
+| Backend API | Node.js, Express 5, MongoDB (Mongoose), Redis, Helmet, Winston |
+| Distributed Nodes | Go 1.24, bbolt (embedded DB), consistent hashing (`buraksezer/consistent`) |
+| ML / AI | Python, scikit-learn, XGBoost, TensorFlow, ONNX, SHAP |
+| Infrastructure | Docker, Docker Compose |
+
+---
+
+## 📋 Requirements
+
+### Global
+
+| Tool | Version |
+|---|---|
+| Docker | 24+ |
+| Docker Compose | v2+ |
+| Node.js | 20+ |
+| Go | 1.24+ |
+| Python | 3.10+ |
+| Expo CLI | Latest |
+
+### Mobile App
+
+- Android Studio **or** Xcode (for native builds)
+- A physical device or emulator/simulator
+- Expo Go app (for quick development)
+
+### Backend Services
+
+- MongoDB instance (Atlas or local)
+- Redis instance (Cloud or local)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Distributed Storage Nodes (Go)
+
+The Go layer runs a 5-node consistent-hash ring. Each node stores an embedded bbolt database.
+
+**Start all 5 nodes with Docker Compose (recommended):**
+
+```bash
+docker-compose up --build
+```
+
+Node ports exposed on `localhost`:
+
+| Node | Host Port |
+|---|---|
+| node1 | 8001 |
+| node2 | 8002 |
+| node3 | 8003 |
+| node4 | 8004 |
+| node5 | 8005 |
+
+**Run a single node manually:**
+
+```bash
+go build -o keyshard ./cmd/keyshard-node
+./keyshard -config=node1.yaml
+```
+
+Node configuration lives in `node1.yaml` – `node5.yaml`. Edit these files to change node IDs, addresses, and peer lists.
+
+---
+
+### 2. Backend API (Node.js)
+
+```bash
+cd backend
+
+# 1. Copy and fill in environment variables
+cp .env.example .env
+
+# 2. Install dependencies
+npm install
+
+# 3. Start in development mode (auto-reload)
+npm run dev
+
+# 4. Or start in production mode
+npm start
+```
+
+The API server starts on the port defined in your `.env` file.
+
+---
+
+### 3. Mobile App (React Native / Expo)
+
+```bash
+cd mobileApp
+
+# 1. Install dependencies
+npm install
+
+# 2. Start the Expo development server
+npm start         # opens Expo Dev Tools
+
+# Run on a specific platform
+npm run android   # requires Android Studio / emulator
+npm run ios       # requires Xcode / simulator (macOS only)
+npm run web       # runs in browser (limited native features)
+```
+
+> **Tip:** Scan the QR code with the **Expo Go** app on your phone for the fastest iteration loop.
+
+---
+
+### 4. ML Password Strength Model (Python)
+
+```bash
+cd ML
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run notebooks or training scripts
+jupyter notebook notebooks/
+```
+
+The trained model is exported as an ONNX file and bundled with the mobile app for fully on-device inference.
+
+---
+
+## 🔄 User Flows
+
+### Sign-Up Flow
+
+![Sign-Up Flow](mobileApp/assets/images/signupflow.png)
+
+### Login Flow
+
+![Login Flow](mobileApp/assets/images/loginflow.png)
+
+---
+
+## 📱 App Screenshots
+
+<table>
+  <tr>
+    <td align="center"><strong>Sign In</strong></td>
+    <td align="center"><strong>Sign Up</strong></td>
+    <td align="center"><strong>Home / Vault</strong></td>
+  </tr>
+  <tr>
+    <td><img src="mobileApp/assets/images/SigninPage.jpg" alt="Sign In Page" width="220"/></td>
+    <td><img src="mobileApp/assets/images/SignUp.jpg" alt="Sign Up Page" width="220"/></td>
+    <td><img src="mobileApp/assets/images/Home.jpg" alt="Home Page" width="220"/></td>
+  </tr>
+</table>
+
+### Password Entry Form
+
+![Password Form](mobileApp/assets/images/passwordform.jpg)
+
+---
+
+## 🌐 Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Description |
+|---|---|
+| `PORT` | Port the Express server listens on |
+| `MONGO_URL` | MongoDB connection string |
+| `REDIS_USERNAME` | Redis username |
+| `REDIS_PASSWORD` | Redis password |
+| `REDIS_HOST` | Redis hostname |
+| `REDIS_PORT` | Redis port |
+
+Copy `backend/.env.example` to `backend/.env` and fill in the values before starting the backend.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit your changes: `git commit -m "feat: add your feature"`.
+4. Push the branch: `git push origin feature/your-feature`.
+5. Open a Pull Request against `main`.
+
+Please follow the existing code style and include relevant tests where applicable.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ — zero knowledge, maximum security.</sub>
+</div>
